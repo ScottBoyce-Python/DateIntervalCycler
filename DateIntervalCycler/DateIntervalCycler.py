@@ -1,15 +1,3 @@
-"""
-Developed by Scott E. Boyce
-Boyce@engineer.com
-
-DateIntervalCycler(
-        cycles: Sequence[tuple[int, int]],
-        first_interval_start: Union[dt.datetime, dt.date],
-        last_interval_end: Union[None, dt.datetime, dt.date] = None,
-        start_before_first_interval: bool = False
-        )
-"""
-
 from typing import Sequence, Union, Optional, Iterator
 import datetime as dt
 import numpy as np
@@ -151,24 +139,24 @@ class DateIntervalCycler:
     Examples:
         >>> from datetime import datetime
         >>> cycles = [(3, 1), (6, 1), (9, 1), (12, 1)]
-        >>> cad = DateIntervalCycler(cycles, datetime(2020, 1, 1))
-        >>> cad.next_get()
+        >>> cid = DateIntervalCycler(cycles, datetime(2020, 1, 1))
+        >>> cid.next_get()
         (datetime.datetime(2020, 3, 1, 0, 0), datetime.datetime(2020, 6, 1, 0, 0))
-        >>> cad.next_get()
+        >>> cid.next_get()
         (datetime.datetime(2020, 6, 1, 0, 0), datetime.datetime(2020, 9, 1, 0, 0))
-        >>> cad.back_get()
+        >>> cid.back_get()
         (datetime.datetime(2020, 3, 1, 0, 0), datetime.datetime(2020, 6, 1, 0, 0))
 
-        >>> cad = DateIntervalCycler.with_monthly(datetime(2020, 1, 1))
-        >>> cad.next_get()
+        >>> cid = DateIntervalCycler.with_monthly(datetime(2020, 1, 1))
+        >>> cid.next_get()
         (datetime.datetime(2020, 1, 1, 0, 0), datetime.datetime(2020, 2, 1, 0, 0))
-        >>> cad.next_get()
+        >>> cid.next_get()
         (datetime.datetime(2020, 2, 1, 0, 0), datetime.datetime(2020, 3, 1, 0, 0))
 
-        >>> cad = DateIntervalCycler.with_daily(datetime(2020, 1, 1))
-        >>> cad.next_get()
+        >>> cid = DateIntervalCycler.with_daily(datetime(2020, 1, 1))
+        >>> cid.next_get()
         (datetime.datetime(2020, 1, 1, 0, 0), datetime.datetime(2020, 1, 2, 0, 0))
-        >>> cad.next_get()
+        >>> cid.next_get()
         (datetime.datetime(2020, 1, 2, 0, 0), datetime.datetime(2020, 1, 3, 0, 0))
     """
 
@@ -513,7 +501,7 @@ class DateIntervalCycler:
         """
         copy_flag = -1 if shallow_copy_cycles else 1
 
-        cad = DateIntervalCycler(
+        cid = DateIntervalCycler(
             self.cycles,
             self._first_start_date,
             self._last_end_date,
@@ -521,23 +509,23 @@ class DateIntervalCycler:
             _internal_copy_init=copy_flag,
         )
 
-        cad._has_last_end_date = self._has_last_end_date
-        cad._end_of_feb_check = self._end_of_feb_check
-        cad._end_of_feb_check_has_28 = self._end_of_feb_check_has_28
-        cad._p_feb_29 = self._p_feb_29
-        cad._y = self._y
-        cad._p = self._p
-        cad._p0 = self._p0
-        cad._p0_date = self._p0_date
-        cad._ind = self._ind
-        cad._len = self._len
-        cad._at_first_interval = self._at_first_interval
-        cad._at_last_interval = self._at_last_interval
+        cid._has_last_end_date = self._has_last_end_date
+        cid._end_of_feb_check = self._end_of_feb_check
+        cid._end_of_feb_check_has_28 = self._end_of_feb_check_has_28
+        cid._p_feb_29 = self._p_feb_29
+        cid._y = self._y
+        cid._p = self._p
+        cid._p0 = self._p0
+        cid._p0_date = self._p0_date
+        cid._ind = self._ind
+        cid._len = self._len
+        cid._at_first_interval = self._at_first_interval
+        cid._at_last_interval = self._at_last_interval
 
         if reset:
-            cad.reset(self._started_before_first_interval)
+            cid.reset(self._started_before_first_interval)
 
-        return cad
+        return cid
 
     def set_start_range_date(self, date: Union[dt.datetime, dt.date], start_before_first_interval: bool = False):
         """
@@ -903,23 +891,23 @@ class DateIntervalCycler:
                 "either when initializing the DateIntervalCycler object with `end=` or\n"
                 "or by passing `end_override` into this function."
             )
-        cad = self.copy()  # No reset, but do a shallow copy
+        cid = self.copy()  # No reset, but do a shallow copy
 
         if start_override is not None:
-            cad.set_start_range_date(start_override)
+            cid.set_start_range_date(start_override)
         elif not from_current_position:
-            cad.reset()
+            cid.reset()
 
         if end_override is not None:
             if type(end_override) is not dt.datetime:
                 end_override = dt.datetime(end_override.year, end_override.month, end_override.day)
 
-            cad._last_end_date = end_override
-            cad._has_last_end_date = True
-            cad._len = -999  # no need to recalculate for dummy variable
-            cad._start_less_end_check()
+            cid._last_end_date = end_override
+            cid._has_last_end_date = True
+            cid._len = -999  # no need to recalculate for dummy variable
+            cid._start_less_end_check()
 
-        return [it for it in cad]
+        return [it for it in cid]
 
     def _lock_cycles(self):
         """Internal method that locks the cycles array to prevent modification."""
@@ -1303,16 +1291,16 @@ if __name__ == "__main__":
         (6, 1),  # Duplicate should be dropped
     ]
 
-    cad = DateIntervalCycler(cycles, dt.datetime(2000, 3, 1))
-    assert cad.next_get()[0] == dt.datetime(2000, 6, 1)
-    assert cad.next_get()[0] == dt.datetime(2001, 6, 1)
-    assert cad.next_get()[0] == dt.datetime(2002, 6, 1)
-    cad = DateIntervalCycler(cycles, dt.datetime(2000, 7, 1))
-    assert cad.next_get()[0] == dt.datetime(2001, 6, 1)
-    assert cad.next_get()[0] == dt.datetime(2002, 6, 1)
-    assert cad.next_get()[0] == dt.datetime(2003, 6, 1)
-    cad = DateIntervalCycler(cycles, dt.datetime(2000, 3, 1), dt.datetime(2019, 7, 1))
-    lst = cad.tolist()
+    cid = DateIntervalCycler(cycles, dt.datetime(2000, 3, 1))
+    assert cid.next_get()[0] == dt.datetime(2000, 6, 1)
+    assert cid.next_get()[0] == dt.datetime(2001, 6, 1)
+    assert cid.next_get()[0] == dt.datetime(2002, 6, 1)
+    cid = DateIntervalCycler(cycles, dt.datetime(2000, 7, 1))
+    assert cid.next_get()[0] == dt.datetime(2001, 6, 1)
+    assert cid.next_get()[0] == dt.datetime(2002, 6, 1)
+    assert cid.next_get()[0] == dt.datetime(2003, 6, 1)
+    cid = DateIntervalCycler(cycles, dt.datetime(2000, 3, 1), dt.datetime(2019, 7, 1))
+    lst = cid.tolist()
     assert lst == [
         (dt.datetime.strptime(start_date, "%Y-%m-%d"), dt.datetime.strptime(end_date, "%Y-%m-%d"))
         for start_date, end_date in [
@@ -1340,8 +1328,8 @@ if __name__ == "__main__":
         ]
     ]
 
-    cad = DateIntervalCycler(cycles, dt.datetime(2000, 7, 1), dt.datetime(2019, 2, 1))
-    lst = cad.tolist()
+    cid = DateIntervalCycler(cycles, dt.datetime(2000, 7, 1), dt.datetime(2019, 2, 1))
+    lst = cid.tolist()
     assert lst == [
         (dt.datetime.strptime(start_date, "%Y-%m-%d"), dt.datetime.strptime(end_date, "%Y-%m-%d"))
         for start_date, end_date in [
@@ -1367,39 +1355,39 @@ if __name__ == "__main__":
         ]
     ]
 
-    cad = DateIntervalCycler.from_year(cycles, 1960)
-    assert cad.next_get()[0] == dt.datetime(1961, 6, 1)
-    assert cad.next_get()[0] == dt.datetime(1962, 6, 1)
-    assert cad.next_get()[0] == dt.datetime(1963, 6, 1)
+    cid = DateIntervalCycler.from_year(cycles, 1960)
+    assert cid.next_get()[0] == dt.datetime(1961, 6, 1)
+    assert cid.next_get()[0] == dt.datetime(1962, 6, 1)
+    assert cid.next_get()[0] == dt.datetime(1963, 6, 1)
 
-    cad = DateIntervalCycler.with_monthly(dt.datetime(2000, 3, 1))
-    assert cad.next_get()[0] == dt.datetime(2000, 4, 1)
-    assert cad.next_get()[0] == dt.datetime(2000, 5, 1)
-    assert cad.next_get()[0] == dt.datetime(2000, 6, 1)
+    cid = DateIntervalCycler.with_monthly(dt.datetime(2000, 3, 1))
+    assert cid.next_get()[0] == dt.datetime(2000, 4, 1)
+    assert cid.next_get()[0] == dt.datetime(2000, 5, 1)
+    assert cid.next_get()[0] == dt.datetime(2000, 6, 1)
 
-    cad = DateIntervalCycler.with_monthly_end(dt.datetime(2000, 3, 1))
-    assert cad.next_get()[0] == dt.datetime(2000, 3, 31)
-    assert cad.next_get()[0] == dt.datetime(2000, 4, 30)
-    assert cad.next_get()[0] == dt.datetime(2000, 5, 31)
+    cid = DateIntervalCycler.with_monthly_end(dt.datetime(2000, 3, 1))
+    assert cid.next_get()[0] == dt.datetime(2000, 3, 31)
+    assert cid.next_get()[0] == dt.datetime(2000, 4, 30)
+    assert cid.next_get()[0] == dt.datetime(2000, 5, 31)
 
-    cad = DateIntervalCycler.with_daily(dt.datetime(2000, 2, 27))
-    assert cad.next_get()[0] == dt.datetime(2000, 2, 28)
-    assert cad.next_get()[0] == dt.datetime(2000, 2, 29)
-    assert cad.next_get()[0] == dt.datetime(2000, 3, 1)
-    assert cad.next_get()[0] == dt.datetime(2000, 3, 2)
+    cid = DateIntervalCycler.with_daily(dt.datetime(2000, 2, 27))
+    assert cid.next_get()[0] == dt.datetime(2000, 2, 28)
+    assert cid.next_get()[0] == dt.datetime(2000, 2, 29)
+    assert cid.next_get()[0] == dt.datetime(2000, 3, 1)
+    assert cid.next_get()[0] == dt.datetime(2000, 3, 2)
 
-    cad = DateIntervalCycler.with_daily(dt.datetime(2001, 2, 27))
-    assert cad.next_get()[0] == dt.datetime(2001, 2, 28)
-    assert cad.next_get()[0] == dt.datetime(2001, 3, 1)
-    assert cad.next_get()[0] == dt.datetime(2001, 3, 2)
+    cid = DateIntervalCycler.with_daily(dt.datetime(2001, 2, 27))
+    assert cid.next_get()[0] == dt.datetime(2001, 2, 28)
+    assert cid.next_get()[0] == dt.datetime(2001, 3, 1)
+    assert cid.next_get()[0] == dt.datetime(2001, 3, 2)
 
-    cad = DateIntervalCycler.with_daily(dt.datetime(2000, 3, 1))
-    assert cad.next_get()[0] == dt.datetime(2000, 3, 2)
-    assert cad.next_get()[0] == dt.datetime(2000, 3, 3)
-    assert cad.next_get()[0] == dt.datetime(2000, 3, 4)
+    cid = DateIntervalCycler.with_daily(dt.datetime(2000, 3, 1))
+    assert cid.next_get()[0] == dt.datetime(2000, 3, 2)
+    assert cid.next_get()[0] == dt.datetime(2000, 3, 3)
+    assert cid.next_get()[0] == dt.datetime(2000, 3, 4)
 
     try:
-        cad = DateIntervalCycler.with_daily(dt.datetime(2000, 3, 1), dt.datetime(2000, 1, 1))
+        cid = DateIntervalCycler.with_daily(dt.datetime(2000, 3, 1), dt.datetime(2000, 1, 1))
     except ValueError:
         pass
 
@@ -1413,20 +1401,20 @@ if __name__ == "__main__":
     DUMMY_START = dt.datetime(2000, 1, 1)
     DUMMY_END = dt.datetime(2005, 1, 1)
 
-    cad = DateIntervalCycler.with_daily(DUMMY_START, DUMMY_END)
-    lst = cad.tolist()
+    cid = DateIntervalCycler.with_daily(DUMMY_START, DUMMY_END)
+    lst = cid.tolist()
     ind = 0
-    for date0, date1 in cad:
-        i0 = cad.index_from_date(date0)
-        i1 = cad.index_from_date(date1)
+    for date0, date1 in cid:
+        i0 = cid.index_from_date(date0)
+        i1 = cid.index_from_date(date1)
         assert ind == i0
         assert ind + 1 == i1
         assert lst[ind] == (date0, date1)
 
-        assert cad.index_to_interval(ind) == (date0, date1)
-        assert cad.index_to_interval(ind, True) == date0
-        assert cad.index_to_interval(ind, False, True) == date1
-        assert cad[ind] == (date0, date1)
+        assert cid.index_to_interval(ind) == (date0, date1)
+        assert cid.index_to_interval(ind, True) == date0
+        assert cid.index_to_interval(ind, False, True) == date1
+        assert cid[ind] == (date0, date1)
         ind += 1
 
     year_start = 1950
@@ -1438,38 +1426,38 @@ if __name__ == "__main__":
         (10, 1),
     ]
 
-    cad = DateIntervalCycler.from_year(cycles, year_start)
-    cad.next()
-    cad.next()
-    assert cad.interval_start == dt.datetime(1950, 7, 1)
-    assert cad.interval_end == dt.datetime(1950, 10, 1)
-    cad.back()
-    assert cad.next_get() == (dt.datetime(1950, 7, 1), dt.datetime(1950, 10, 1))
-    assert cad.next_get() == (dt.datetime(1950, 10, 1), dt.datetime(1951, 1, 1))
-    assert cad.next_get() == (dt.datetime(1951, 1, 1), dt.datetime(1951, 4, 1))
+    cid = DateIntervalCycler.from_year(cycles, year_start)
+    cid.next()
+    cid.next()
+    assert cid.interval_start == dt.datetime(1950, 7, 1)
+    assert cid.interval_end == dt.datetime(1950, 10, 1)
+    cid.back()
+    assert cid.next_get() == (dt.datetime(1950, 7, 1), dt.datetime(1950, 10, 1))
+    assert cid.next_get() == (dt.datetime(1950, 10, 1), dt.datetime(1951, 1, 1))
+    assert cid.next_get() == (dt.datetime(1951, 1, 1), dt.datetime(1951, 4, 1))
 
-    cad.reset()
-    assert cad.interval_start == dt.datetime(1950, 1, 1)
+    cid.reset()
+    assert cid.interval_start == dt.datetime(1950, 1, 1)
 
-    cad2 = cad.copy()
+    cad2 = cid.copy()
 
-    cad.next()
-    cad.next()
-    assert cad.interval_start == dt.datetime(1950, 7, 1)
-    assert cad.interval == (dt.datetime(1950, 7, 1), dt.datetime(1950, 10, 1))
+    cid.next()
+    cid.next()
+    assert cid.interval_start == dt.datetime(1950, 7, 1)
+    assert cid.interval == (dt.datetime(1950, 7, 1), dt.datetime(1950, 10, 1))
 
     assert cad2.interval_start == dt.datetime(1950, 1, 1)  # Should remain unchanged
     del cad2
 
     next_time_day_diff = (dt.datetime(1951, 1, 1) - dt.datetime(1950, 10, 1)).total_seconds() / 86400.0
 
-    cad.next()
-    assert cad.interval_length == next_time_day_diff  # Advance time and return day difference
+    cid.next()
+    assert cid.interval_length == next_time_day_diff  # Advance time and return day difference
 
     start = dt.datetime(2000, 2, 1)
     end = dt.datetime(2005, 11, 1)
 
-    assert cad.tolist(start, end) == [
+    assert cid.tolist(start, end) == [
         (dt.datetime.strptime(start_date, "%Y-%m-%d"), dt.datetime.strptime(end_date, "%Y-%m-%d"))
         for start_date, end_date in [
             ("2000-02-01", "2000-04-01"),  # Note, it honors the starting date
@@ -1509,22 +1497,22 @@ if __name__ == "__main__":
         (10, 1),
     ]
 
-    cad = DateIntervalCycler.from_year(cycles, 2000)
+    cid = DateIntervalCycler.from_year(cycles, 2000)
 
-    assert (cad.cycles == np.array([(1, 1), (4, 1), (4, 3), (4, 5), (7, 1), (10, 1)], dtype=int)).all()
+    assert (cid.cycles == np.array([(1, 1), (4, 1), (4, 3), (4, 5), (7, 1), (10, 1)], dtype=int)).all()
 
-    cad = DateIntervalCycler.with_monthly(DUMMY_START)
+    cid = DateIntervalCycler.with_monthly(DUMMY_START)
     assert (
-        cad.cycles
+        cid.cycles
         == np.array(
             [(1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1), (11, 1), (12, 1)],
             dtype=int,
         )
     ).all()
 
-    cad = DateIntervalCycler.with_monthly_end(DUMMY_START)
+    cid = DateIntervalCycler.with_monthly_end(DUMMY_START)
     assert (
-        cad.cycles
+        cid.cycles
         == np.array(
             [
                 (1, 31),
@@ -1544,55 +1532,55 @@ if __name__ == "__main__":
         )
     ).all()
 
-    cad = DateIntervalCycler.with_daily(DUMMY_START)
+    cid = DateIntervalCycler.with_daily(DUMMY_START)
 
-    assert cad.interval_start == DUMMY_START
+    assert cid.interval_start == DUMMY_START
 
     for i in range(56):  # Move to Feb 26 as start date
-        cad.next()
+        cid.next()
 
-    assert cad.next_get() == (dt.datetime(2000, 2, 27), dt.datetime(2000, 2, 28))
-    assert cad.next_get() == (dt.datetime(2000, 2, 28), dt.datetime(2000, 2, 29))
-    assert cad.next_get() == (dt.datetime(2000, 2, 29), dt.datetime(2000, 3, 1))
+    assert cid.next_get() == (dt.datetime(2000, 2, 27), dt.datetime(2000, 2, 28))
+    assert cid.next_get() == (dt.datetime(2000, 2, 28), dt.datetime(2000, 2, 29))
+    assert cid.next_get() == (dt.datetime(2000, 2, 29), dt.datetime(2000, 3, 1))
 
-    cad.reset()
-    assert cad.interval_start == DUMMY_START
+    cid.reset()
+    assert cid.interval_start == DUMMY_START
 
     dd = daily_dates(DUMMY_START)
     for i in range(12000):  # Check about 30 years of daily
-        if cad.interval_start != next(dd):
+        if cid.interval_start != next(dd):
             date = next(dd) - dt.timedelta(days=1)
             raise RuntimeError(
                 "\nDaily date dose not match expected datetime for the "
-                f"{i} iteration,\nwhich returned a date of {cad.interval_start}\nbut expected {date}"
+                f"{i} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
             )
-        cad.next()
+        cid.next()
 
-    if cad.interval_start != next(dd):
+    if cid.interval_start != next(dd):
         date = next(dd) - dt.timedelta(days=1)
         raise RuntimeError(
             "\nDaily date dose not match expected datetime for the "
-            f"{i+1} iteration,\nwhich returned a date of {cad.interval_start}\nbut expected {date}"
+            f"{i+1} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
         )
 
-    dd = daily_dates(cad.interval_start, reverse=True)
+    dd = daily_dates(cid.interval_start, reverse=True)
     for i in range(12000):  # Check about 30 years of daily
-        if cad.interval_start != next(dd):
+        if cid.interval_start != next(dd):
             date = next(dd) + dt.timedelta(days=1)
             raise RuntimeError(
                 "\nDaily date in reverse dose not match expected datetime for the "
-                f"{i} iteration,\nwhich returned a date of {cad.interval_start}\nbut expected {date}"
+                f"{i} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
             )
-        cad.back()
+        cid.back()
 
-    if cad.interval_start != next(dd):
+    if cid.interval_start != next(dd):
         date = next(dd) - dt.timedelta(days=1)
         raise RuntimeError(
             "\nDaily date in reverse dose not match expected datetime for the "
-            f"{i+1} iteration,\nwhich returned a date of {cad.interval_start}\nbut expected {date}"
+            f"{i+1} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
         )
 
-    assert cad.interval_start == DUMMY_START  # Should be back to the start
+    assert cid.interval_start == DUMMY_START  # Should be back to the start
 
     cycles = [
         (1, 1),
@@ -1604,140 +1592,140 @@ if __name__ == "__main__":
     start = dt.datetime(1950, 3, 1)
     end = dt.datetime(1970, 11, 1)
 
-    cad = DateIntervalCycler(cycles, start, end)
+    cid = DateIntervalCycler(cycles, start, end)
 
-    assert cad.interval_start == dt.datetime(1950, 3, 1)
-    assert cad.interval_end == dt.datetime(1950, 4, 1)
-    cad.next()
-    assert cad.interval_start == dt.datetime(1950, 4, 1)
-    assert cad.interval_end == dt.datetime(1950, 7, 1)
-    cad.next()
-    assert cad.interval_start == dt.datetime(1950, 7, 1)
-    assert cad.interval_end == dt.datetime(1950, 10, 1)
-    cad.back()
-    assert cad.interval_start == dt.datetime(1950, 4, 1)
-    assert cad.interval_end == dt.datetime(1950, 7, 1)
-    cad.back()
-    assert cad.interval_start == dt.datetime(1950, 3, 1)
-    assert cad.interval_end == dt.datetime(1950, 4, 1)
+    assert cid.interval_start == dt.datetime(1950, 3, 1)
+    assert cid.interval_end == dt.datetime(1950, 4, 1)
+    cid.next()
+    assert cid.interval_start == dt.datetime(1950, 4, 1)
+    assert cid.interval_end == dt.datetime(1950, 7, 1)
+    cid.next()
+    assert cid.interval_start == dt.datetime(1950, 7, 1)
+    assert cid.interval_end == dt.datetime(1950, 10, 1)
+    cid.back()
+    assert cid.interval_start == dt.datetime(1950, 4, 1)
+    assert cid.interval_end == dt.datetime(1950, 7, 1)
+    cid.back()
+    assert cid.interval_start == dt.datetime(1950, 3, 1)
+    assert cid.interval_end == dt.datetime(1950, 4, 1)
 
     start = dt.datetime(1952, 2, 1)
     end = dt.datetime(2020, 11, 1)
-    cad = DateIntervalCycler.with_daily(start, end)
+    cid = DateIntervalCycler.with_daily(start, end)
 
-    assert cad.interval_start == start
-    assert cad.interval_end == dt.datetime(1952, 2, 2)
+    assert cid.interval_start == start
+    assert cid.interval_end == dt.datetime(1952, 2, 2)
 
     for i in range(25):  # Move to Feb 26 as start date
-        cad.next()
+        cid.next()
 
-    assert cad.next_get() == (dt.datetime(1952, 2, 27), dt.datetime(1952, 2, 28))
-    assert cad.next_get() == (dt.datetime(1952, 2, 28), dt.datetime(1952, 2, 29))
-    assert cad.next_get() == (dt.datetime(1952, 2, 29), dt.datetime(1952, 3, 1))
+    assert cid.next_get() == (dt.datetime(1952, 2, 27), dt.datetime(1952, 2, 28))
+    assert cid.next_get() == (dt.datetime(1952, 2, 28), dt.datetime(1952, 2, 29))
+    assert cid.next_get() == (dt.datetime(1952, 2, 29), dt.datetime(1952, 3, 1))
 
-    cad.reset()
-    assert cad.interval_start == start
+    cid.reset()
+    assert cid.interval_start == start
 
     dd = daily_dates(start)
     for i in range(12000):  # Check about 30 years of daily
-        if cad.interval_start != next(dd):
+        if cid.interval_start != next(dd):
             date = next(dd) - dt.timedelta(days=1)
             raise RuntimeError(
                 "\nDaily date dose not match expected datetime for the "
-                f"{i} iteration,\nwhich returned a date of {cad.interval_start}\nbut expected {date}"
+                f"{i} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
             )
-        cad.next()
+        cid.next()
 
-    if cad.interval_start != next(dd):
+    if cid.interval_start != next(dd):
         date = next(dd) - dt.timedelta(days=1)
         raise RuntimeError(
             "\nDaily date dose not match expected datetime for the "
-            f"{i+1} iteration,\nwhich returned a date of {cad.interval_start}\nbut expected {date}"
+            f"{i+1} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
         )
 
-    dd = daily_dates(cad.interval_start, reverse=True)
+    dd = daily_dates(cid.interval_start, reverse=True)
     for i in range(12000):  # Check about 30 years of daily
-        if cad.interval_start != next(dd):
+        if cid.interval_start != next(dd):
             date = next(dd) + dt.timedelta(days=1)
             raise RuntimeError(
                 "\nDaily date in reverse dose not match expected datetime for the "
-                f"{i} iteration,\nwhich returned a date of {cad.interval_start}\nbut expected {date}"
+                f"{i} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
             )
-        cad.back()
+        cid.back()
 
-    if cad.interval_start != next(dd):
+    if cid.interval_start != next(dd):
         date = next(dd) - dt.timedelta(days=1)
         raise RuntimeError(
             "\nDaily date in reverse dose not match expected datetime for the "
-            f"{i+1} iteration,\nwhich returned a date of {cad.interval_start}\nbut expected {date}"
+            f"{i+1} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
         )
 
-    assert cad.interval_start == start  # Should be back to the start
+    assert cid.interval_start == start  # Should be back to the start
 
     start = dt.datetime(2000, 2, 1)
     end = dt.datetime(2020, 11, 1)
-    cad = DateIntervalCycler.with_daily(start, end)
+    cid = DateIntervalCycler.with_daily(start, end)
 
     dd = daily_dates(start)
     for i in range(12000):  # Check about 30 years of daily
-        if cad.interval_start != next(dd):
+        if cid.interval_start != next(dd):
             date = next(dd) - dt.timedelta(days=1)
             raise RuntimeError(
                 "\nDaily date dose not match expected datetime for the "
-                f"{i} iteration,\nwhich returned a date of {cad.interval_start}\nbut expected {date}"
+                f"{i} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
             )
-        if cad.next() > 0:
+        if cid.next() > 0:
             break
 
-    assert cad.interval_start == end - dt.timedelta(days=1)
-    assert cad.interval_end == end
+    assert cid.interval_start == end - dt.timedelta(days=1)
+    assert cid.interval_end == end
 
-    cad.back()
-    assert cad.interval_start == end - dt.timedelta(days=2)
-    assert cad.interval_end == end - dt.timedelta(days=1)
-    cad.back()
-    assert cad.interval_start == end - dt.timedelta(days=3)
-    assert cad.interval_end == end - dt.timedelta(days=2)
+    cid.back()
+    assert cid.interval_start == end - dt.timedelta(days=2)
+    assert cid.interval_end == end - dt.timedelta(days=1)
+    cid.back()
+    assert cid.interval_start == end - dt.timedelta(days=3)
+    assert cid.interval_end == end - dt.timedelta(days=2)
 
-    cad.reset()
+    cid.reset()
     dd = daily_dates(start)
-    for interval in cad:  # Check about 30 years of daily
+    for interval in cid:  # Check about 30 years of daily
         if interval[0] != next(dd):
             date = next(dd) - dt.timedelta(days=1)
             raise RuntimeError(
                 "\nDaily date dose not match expected datetime for the "
-                f"{i} iteration,\nwhich returned a date of {cad.interval_start}\nbut expected {date}"
+                f"{i} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
             )
 
-    assert cad.interval_start == end - dt.timedelta(days=1)
-    assert cad.interval_end == end
+    assert cid.interval_start == end - dt.timedelta(days=1)
+    assert cid.interval_end == end
 
-    cad.back()
-    assert cad.interval_start == end - dt.timedelta(days=2)
-    assert cad.interval_end == end - dt.timedelta(days=1)
-    cad.back()
-    assert cad.interval_start == end - dt.timedelta(days=3)
-    assert cad.interval_end == end - dt.timedelta(days=2)
+    cid.back()
+    assert cid.interval_start == end - dt.timedelta(days=2)
+    assert cid.interval_end == end - dt.timedelta(days=1)
+    cid.back()
+    assert cid.interval_start == end - dt.timedelta(days=3)
+    assert cid.interval_end == end - dt.timedelta(days=2)
 
-    cad.reset()
+    cid.reset()
     dd = daily_dates(start)
-    for interval in cad.iter():  # Check about 30 years of daily
+    for interval in cid.iter():  # Check about 30 years of daily
         if interval[0] != next(dd):
             date = next(dd) - dt.timedelta(days=1)
             raise RuntimeError(
                 "\nDaily date dose not match expected datetime for the "
-                f"{i} iteration,\nwhich returned a date of {cad.interval_start}\nbut expected {date}"
+                f"{i} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
             )
 
-    assert cad.interval_start == end - dt.timedelta(days=1)
-    assert cad.interval_end == end
+    assert cid.interval_start == end - dt.timedelta(days=1)
+    assert cid.interval_end == end
 
-    cad.back()
-    assert cad.interval_start == end - dt.timedelta(days=2)
-    assert cad.interval_end == end - dt.timedelta(days=1)
-    cad.back()
-    assert cad.interval_start == end - dt.timedelta(days=3)
-    assert cad.interval_end == end - dt.timedelta(days=2)
+    cid.back()
+    assert cid.interval_start == end - dt.timedelta(days=2)
+    assert cid.interval_end == end - dt.timedelta(days=1)
+    cid.back()
+    assert cid.interval_start == end - dt.timedelta(days=3)
+    assert cid.interval_end == end - dt.timedelta(days=2)
 
     # ----------------------------------------------------------------------------------------
 
@@ -1797,21 +1785,21 @@ if __name__ == "__main__":
         it += 1
         print(f"   2M Test {it} of {dm}")
         for end in end_list:
-            cad = DateIntervalCycler(cycles, start, end)
+            cid = DateIntervalCycler(cycles, start, end)
             ind = 0
             e_old = start
-            for s, e in cad:
-                # print(f"{st(start)}, {st(end)}, {cad.index}, {st(s)}, {st(e)}, ")
+            for s, e in cid:
+                # print(f"{st(start)}, {st(end)}, {cid.index}, {st(s)}, {st(e)}, ")
                 assert s == e_old
-                assert cad.index == ind
-                assert cad.index == cad.index_from_date(s)
-                assert cad.index == cad.index_from_date(half(s, e))
-                assert cad.index_to_interval(ind) == (s, e)
-                assert cad.index + 1 == cad.index_from_date(e)
+                assert cid.index == ind
+                assert cid.index == cid.index_from_date(s)
+                assert cid.index == cid.index_from_date(half(s, e))
+                assert cid.index_to_interval(ind) == (s, e)
+                assert cid.index + 1 == cid.index_from_date(e)
 
-                assert cad.index_to_interval(cad.index) == (s, e)
-                assert cad.index_to_interval(cad.index, True) == s
-                assert cad.index_to_interval(cad.index, False, True) == e
+                assert cid.index_to_interval(cid.index) == (s, e)
+                assert cid.index_to_interval(cid.index, True) == s
+                assert cid.index_to_interval(cid.index, False, True) == e
 
                 e_old = e
                 ind += 1
@@ -1864,19 +1852,19 @@ if __name__ == "__main__":
         it += 1
         print(f"   D Test {it} of {dm}")
         for end in end_list:
-            cad = DateIntervalCycler.with_daily(start, end)
+            cid = DateIntervalCycler.with_daily(start, end)
             ind = 0
             e_old = start
-            for s, e in cad:
-                # print(f"{st(start)}, {st(end)}, {cad.index}, {st(s)}, {st(e)}, ")
+            for s, e in cid:
+                # print(f"{st(start)}, {st(end)}, {cid.index}, {st(s)}, {st(e)}, ")
                 assert s == e_old
-                assert cad.index == ind
-                assert cad.index == cad.index_from_date(s)
-                assert cad.index_to_interval(ind) == (s, e)
+                assert cid.index == ind
+                assert cid.index == cid.index_from_date(s)
+                assert cid.index_to_interval(ind) == (s, e)
 
                 e_old = e
                 ind += 1
-            assert cad.index + 1 == cad.index_from_date(e)  # e = end date
+            assert cid.index + 1 == cid.index_from_date(e)  # e = end date
 
     start_list = (
         [dt.datetime(y0, 1, 1), dt.datetime(y0, 5, 1), dt.datetime(y0, 6, 1), dt.datetime(y0, 7, 1)]
@@ -1918,16 +1906,16 @@ if __name__ == "__main__":
         it += 1
         print(f"   SD Test {it} of {dm}")
         for end in end_list:
-            cad = DateIntervalCycler(cycles, start, end)
+            cid = DateIntervalCycler(cycles, start, end)
             ind = 0
             e_old = start
-            for s, e in cad:
+            for s, e in cid:
                 assert s == e_old
-                assert cad.index == ind
-                assert cad.index == cad.index_from_date(s)
-                assert cad.index_to_interval(ind) == (s, e)
+                assert cid.index == ind
+                assert cid.index == cid.index_from_date(s)
+                assert cid.index_to_interval(ind) == (s, e)
 
                 e_old = e
                 ind += 1
-            assert cad.index + 1 == cad.index_from_date(e)  # e = end date
+            assert cid.index + 1 == cid.index_from_date(e)  # e = end date
     pass
