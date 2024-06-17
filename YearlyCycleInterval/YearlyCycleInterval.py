@@ -1159,7 +1159,55 @@ class YearlyIntervalCycler:
             return self.copy()
         if isinstance(ind, int):
             return self.index_to_interval(ind)
-        return self.index_from_date(ind)
+        if isinstance(ind, slice):
+            st, sp, stp = ind.start, ind.stop, ind.step
+            if st is None:
+                st = 0
+            if sp is None:
+                sp = self._len
+            if stp is not None:
+                raise IndexError(
+                    "\nYearlyIntervalCycler: index does not support a step/stride.\n"
+                    'Requested slice index: "' + str(ind) + '"    ->(start, stop, step)\n'
+                )
+            if not isinstance(st, int) or not isinstance(sp, int):
+                raise IndexError(
+                    "\nYearlyIntervalCycler: index slices may only be integers.\n"
+                    'Requested slice index: "' + str(ind) + '"    ->(start, stop, step)\n'
+                )
+            if not self._has_last_end_date:
+                if st < 0 or sp < 0 or sp >= self._len:
+                    raise IndexError(
+                        "\nYearlyIntervalCycler: index out of range.\n"
+                        "If last_interval_end is None, then\n"
+                        "the end index must be specified and negative indices are not allowed.\n"
+                        'Requested slice index: "' + str(ind) + '"    ->(start, stop, step)\n'
+                    )
+            if st < 0:
+                st += self._len
+            if sp < 0:
+                sp += self._len
+            if sp <= st:
+                return []
+
+            start = self.index_to_interval(st, only_start=True)
+
+            if st == self._len:
+                end = self._last_end_date
+            else:
+                end = self.index_to_interval(sp, only_start=True)
+
+            return self.tolist(start, end, False)
+
+        if isinstance(ind, tuple) or isinstance(ind, list):
+            dates = []
+            for i in ind:
+                dates.append(self.index_to_interval(i))
+
+        if isinstance(ind, dt.datetime) or isinstance(ind, dt.date):
+            return self.index_from_date(ind)
+
+        raise IndexError(f"\nYearlyIntervalCycler: unsupported index:\n{ind}\n")
 
     def __copy__(self) -> "YearlyIntervalCycler":
         return self.copy()
