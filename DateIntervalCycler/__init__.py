@@ -11,8 +11,8 @@ YearlyIntervalCycler(
 
 """
 
-from .YearlyCycleInterval import YearlyCycleInterval
+from .DateIntervalCycler import DateIntervalCycler
 
 __all__ = [
-    "YearlyCycleInterval",
+    "DateIntervalCycler",
 ]

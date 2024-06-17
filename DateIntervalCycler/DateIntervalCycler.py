@@ -2,7 +2,7 @@
 Developed by Scott E. Boyce
 Boyce@engineer.com
 
-YearlyIntervalCycler(
+DateIntervalCycler(
         cycles: Sequence[tuple[int, int]],
         first_interval_start: Union[dt.datetime, dt.date],
         last_interval_end: Union[None, dt.datetime, dt.date] = None,
@@ -19,7 +19,7 @@ FEB29_CHECK = np.array([2, 29], dtype=int)
 NUL = dt.datetime(1, 1, 1)
 
 __all__ = [
-    "YearlyIntervalCycler",
+    "DateIntervalCycler",
 ]
 
 # Days in each month of a leap year, used for validation.
@@ -49,7 +49,7 @@ def _intervals_to_ndarray(cycles: Sequence[tuple[int, int]]) -> np.ndarray:
     return np.array(sorted(set([(r[0], r[1]) for r in cycles])), dtype=int)
 
 
-class YearlyIntervalCycler:
+class DateIntervalCycler:
     """
     A class that cycles through datetime intervals based on provided (month, day) tuples.
 
@@ -59,7 +59,7 @@ class YearlyIntervalCycler:
     contains both (2, 28) and (2, 29), then it will skip using (2, 29) for non-leap years.
 
     This docstring uses dt as shorthand for a datetime.datetime object; dt.date for a
-    datetime.date object; and cycler for a YearlyIntervalCycler object.
+    datetime.date object; and cycler for a DateIntervalCycler object.
 
     Args:
         cycles (Sequence[tuple[int, int]]): Sequence of (month, day) tuples defining the interval cycles.
@@ -95,19 +95,19 @@ class YearlyIntervalCycler:
     Methods:
 
         from_year(cycles, year_start, starting_cycle_index=0, year_end=None, ending_cycle_index=0):
-            Create a YearlyIntervalCycler from a starting year and cycles index.
+            Create a DateIntervalCycler from a starting year and cycles index.
 
         with_monthly(first_interval_start, last_interval_end=None):
-            Create a YearlyIntervalCycler with monthly interval's starting on the first of each month.
+            Create a DateIntervalCycler with monthly interval's starting on the first of each month.
 
         with_monthly_end(first_interval_start, last_interval_end=None):
-            Create a YearlyIntervalCycler with monthly interval's ending on the last day of each month.
+            Create a DateIntervalCycler with monthly interval's ending on the last day of each month.
 
         with_daily(first_interval_start, last_interval_end=None):
-            Create a YearlyIntervalCycler with daily intervals.
+            Create a DateIntervalCycler with daily intervals.
 
         copy(reset=False, shallow_copy_cycles=True):
-            Creates a copy of the YearlyIntervalCycler object.
+            Creates a copy of the DateIntervalCycler object.
 
         reset(start_before_first_interval=False):
             Resets the current interval to the first interval.
@@ -151,7 +151,7 @@ class YearlyIntervalCycler:
     Examples:
         >>> from datetime import datetime
         >>> cycles = [(3, 1), (6, 1), (9, 1), (12, 1)]
-        >>> cad = YearlyIntervalCycler(cycles, datetime(2020, 1, 1))
+        >>> cad = DateIntervalCycler(cycles, datetime(2020, 1, 1))
         >>> cad.next_get()
         (datetime.datetime(2020, 3, 1, 0, 0), datetime.datetime(2020, 6, 1, 0, 0))
         >>> cad.next_get()
@@ -159,13 +159,13 @@ class YearlyIntervalCycler:
         >>> cad.back_get()
         (datetime.datetime(2020, 3, 1, 0, 0), datetime.datetime(2020, 6, 1, 0, 0))
 
-        >>> cad = YearlyIntervalCycler.with_monthly(datetime(2020, 1, 1))
+        >>> cad = DateIntervalCycler.with_monthly(datetime(2020, 1, 1))
         >>> cad.next_get()
         (datetime.datetime(2020, 1, 1, 0, 0), datetime.datetime(2020, 2, 1, 0, 0))
         >>> cad.next_get()
         (datetime.datetime(2020, 2, 1, 0, 0), datetime.datetime(2020, 3, 1, 0, 0))
 
-        >>> cad = YearlyIntervalCycler.with_daily(datetime(2020, 1, 1))
+        >>> cad = DateIntervalCycler.with_daily(datetime(2020, 1, 1))
         >>> cad.next_get()
         (datetime.datetime(2020, 1, 1, 0, 0), datetime.datetime(2020, 1, 2, 0, 0))
         >>> cad.next_get()
@@ -209,7 +209,7 @@ class YearlyIntervalCycler:
         _internal_copy_init: int = 0,
     ):
         """
-        Initialize the YearlyIntervalCycler.
+        Initialize the DateIntervalCycler.
 
         Args:
             cycles (Sequence[tuple[int, int]]): Sequence of (month, day) tuples defining the intervals.
@@ -233,7 +233,7 @@ class YearlyIntervalCycler:
             self._has_last_end_date = False
             self._end_of_feb_check = False
             self._end_of_feb_check_has_28 = False
-            self._p_feb_29 = YearlyIntervalCycler.MAX_INTERVAL
+            self._p_feb_29 = DateIntervalCycler.MAX_INTERVAL
             self._y = 0
             self._p = 0
             self._p0 = 0
@@ -251,7 +251,7 @@ class YearlyIntervalCycler:
         self._dim = self.cycles.shape[0]
         self._end_of_feb_check = False
         self._end_of_feb_check_has_28 = False
-        self._p_feb_29 = YearlyIntervalCycler.MAX_INTERVAL
+        self._p_feb_29 = DateIntervalCycler.MAX_INTERVAL
         self._p0_date = NUL
 
         self._has_last_end_date = False
@@ -259,12 +259,12 @@ class YearlyIntervalCycler:
         self._at_last_interval = 0
 
         if self._dim < 1:
-            raise ValueError("\nYearlyIntervalCycler: len(cycles) must be greater than zero.")
+            raise ValueError("\nDateIntervalCycler: len(cycles) must be greater than zero.")
 
         # Validate the date intervals and check for leap year considerations
         for i, (vm, vd) in enumerate(cycles):
             if vd < 1 or vm < 1 or vm > 12 or _month_days_29[vm] < vd:
-                raise ValueError(f"YearlyIntervalCycler: Invalid (month, day) entry at cycles[{i}] = ({vm}, {vd})")
+                raise ValueError(f"DateIntervalCycler: Invalid (month, day) entry at cycles[{i}] = ({vm}, {vd})")
 
         p_feb29 = np.where(np.all(self.cycles == FEB29_CHECK, axis=1))[0]
         self._end_of_feb_check = p_feb29.size == 1
@@ -281,7 +281,7 @@ class YearlyIntervalCycler:
     def size(self) -> int:
         """
         Returns the number of intervals. If last_interval_end is None,
-        returns YearlyIntervalCycler.MAX_INTERVAL.
+        returns DateIntervalCycler.MAX_INTERVAL.
 
         Returns:
             int: The number of intervals.
@@ -379,11 +379,11 @@ class YearlyIntervalCycler:
         starting_cycle_index=0,
         year_end: Optional[int] = None,
         ending_cycle_index: Optional[int] = 0,
-    ) -> "YearlyIntervalCycler":
+    ) -> "DateIntervalCycler":
         """
-        Create a YearlyIntervalCycler from a starting year and cycles index.
+        Create a DateIntervalCycler from a starting year and cycles index.
         Equivalent to:
-           YearlyIntervalCycler(cycles, dt.datetime(year_start, *cycles[starting_cycle_index]))
+           DateIntervalCycler(cycles, dt.datetime(year_start, *cycles[starting_cycle_index]))
 
         Args:
             cycles (Sequence[tuple[int, int]]): Sequence of (month, day) tuples defining the interval cycles.
@@ -395,7 +395,7 @@ class YearlyIntervalCycler:
                                                            to the end of the last interval. Defaults to 0.
 
         Returns:
-            YearlyIntervalCycler: The initialized YearlyIntervalCycler object.
+            DateIntervalCycler: The initialized DateIntervalCycler object.
         """
         cycles = _intervals_to_ndarray(cycles)
         m, d = cycles[starting_cycle_index]
@@ -413,9 +413,9 @@ class YearlyIntervalCycler:
         cls,
         first_interval_start: Union[dt.datetime, dt.date],
         last_interval_end: Union[None, dt.datetime, dt.date] = None,
-    ) -> "YearlyIntervalCycler":
+    ) -> "DateIntervalCycler":
         """
-        Create a YearlyIntervalCycler with monthly intervals starting on the first of each month.
+        Create a DateIntervalCycler with monthly intervals starting on the first of each month.
 
         Args:
             first_interval_start (Union[dt.datetime, dt.date]): The start date of the first interval.
@@ -423,7 +423,7 @@ class YearlyIntervalCycler:
                                                                              Defaults to None.
 
         Returns:
-            YearlyIntervalCycler: The initialized YearlyIntervalCycler object with monthly intervals.
+            DateIntervalCycler: The initialized DateIntervalCycler object with monthly intervals.
         """
         return cls([(m, 1) for m in range(1, 13)], first_interval_start, last_interval_end)
 
@@ -432,9 +432,9 @@ class YearlyIntervalCycler:
         cls,
         first_interval_start: Union[dt.datetime, dt.date],
         last_interval_end: Union[None, dt.datetime, dt.date] = None,
-    ) -> "YearlyIntervalCycler":
+    ) -> "DateIntervalCycler":
         """
-        Create a YearlyIntervalCycler with monthly interval's ending on the last day of each month.
+        Create a DateIntervalCycler with monthly interval's ending on the last day of each month.
 
         Args:
             first_interval_start (Union[dt.datetime, dt.date]): The start date of the first interval.
@@ -442,7 +442,7 @@ class YearlyIntervalCycler:
                                                                              Defaults to None.
 
         Returns:
-            YearlyIntervalCycler: The initialized YearlyIntervalCycler object with monthly interval's ending on the last day of each month.
+            DateIntervalCycler: The initialized DateIntervalCycler object with monthly interval's ending on the last day of each month.
         """
         return cls([(m, _month_days_29[m]) for m in range(1, 13)], first_interval_start, last_interval_end)
 
@@ -451,9 +451,9 @@ class YearlyIntervalCycler:
         cls,
         first_interval_start: Union[dt.datetime, dt.date],
         last_interval_end: Union[None, dt.datetime, dt.date] = None,
-    ) -> "YearlyIntervalCycler":
+    ) -> "DateIntervalCycler":
         """
-        Create a YearlyIntervalCycler with daily intervals.
+        Create a DateIntervalCycler with daily intervals.
 
         Args:
             first_interval_start (Union[dt.datetime, dt.date]): The start date of the first interval.
@@ -461,7 +461,7 @@ class YearlyIntervalCycler:
                                                                              Defaults to None.
 
         Returns:
-            YearlyIntervalCycler: The initialized YearlyIntervalCycler object with daily intervals.
+            DateIntervalCycler: The initialized DateIntervalCycler object with daily intervals.
         """
         return cls(
             [(m, d) for m in range(1, 13) for d in range(1, _month_days_29[m] + 1)],
@@ -495,27 +495,25 @@ class YearlyIntervalCycler:
             int: The number of days in the month.
         """
         if month < 1 or 12 < month:
-            raise ValueError(
-                f"\nYearlyIntervalCycler.month_days: month must be between 1 and 12, but received: {month}"
-            )
+            raise ValueError(f"\nDateIntervalCycler.month_days: month must be between 1 and 12, but received: {month}")
         if leap:
             return _month_days_29[month]
         return _month_days_28[month]
 
-    def copy(self, reset: bool = False, shallow_copy_cycles=True) -> "YearlyIntervalCycler":
+    def copy(self, reset: bool = False, shallow_copy_cycles=True) -> "DateIntervalCycler":
         """
-        Creates a copy of the YearlyIntervalCycler object.
+        Creates a copy of the DateIntervalCycler object.
 
         Args:
             reset (bool, optional): Reset the copy to the first interval. Defaults to False.
             shallow_copy_cycles (bool, optional): Create a shallow copy of cycles. Defaults to True.
 
         Returns:
-            YearlyIntervalCycler: The copied YearlyIntervalCycler object.
+            DateIntervalCycler: The copied DateIntervalCycler object.
         """
         copy_flag = -1 if shallow_copy_cycles else 1
 
-        cad = YearlyIntervalCycler(
+        cad = DateIntervalCycler(
             self.cycles,
             self._first_start_date,
             self._last_end_date,
@@ -585,11 +583,11 @@ class YearlyIntervalCycler:
         elif self._has_last_end_date:
             self._len = self.index_from_date(date)
         else:
-            self._len = YearlyIntervalCycler.MAX_INTERVAL
+            self._len = DateIntervalCycler.MAX_INTERVAL
 
     def reset(self, start_before_first_interval: bool = False, *, set_p0: bool = False):
         """
-        Reset the YearlyIntervalCycler to the first interval.
+        Reset the DateIntervalCycler to the first interval.
 
         Args:
             start_before_first_interval (bool, optional): Flag to start before the first interval. Defaults to False.
@@ -666,7 +664,7 @@ class YearlyIntervalCycler:
         if self._at_last_interval:
             self._at_last_interval += 1
             if allowStopIteration:
-                raise StopIteration("YearlyIntervalCycler.next cannot go beyond the ending date")
+                raise StopIteration("DateIntervalCycler.next cannot go beyond the ending date")
             return self._at_last_interval - 1
 
         if self._at_first_interval:
@@ -712,7 +710,7 @@ class YearlyIntervalCycler:
                 self._at_first_interval = 1
             self._at_first_interval += 1
             if allowStopIteration:
-                raise StopIteration("YearlyIntervalCycler.back cannot go beyond the starting date.")
+                raise StopIteration("DateIntervalCycler.back cannot go beyond the starting date.")
             return self._at_first_interval - 1  # Number of times a StopIteration would have occurred
 
         if self._at_last_interval:
@@ -896,13 +894,13 @@ class YearlyIntervalCycler:
             from_current_position (bool, optional): Flag to start list from current interval. Defaults to False.
 
         Returns:
-            list[tuple[dt.datetime, dt.datetime]]: The YearlyIntervalCycler object as a list.
+            list[tuple[dt.datetime, dt.datetime]]: The DateIntervalCycler object as a list.
         """
 
         if not self._has_last_end_date and end_override is None:
             raise ValueError(
-                "\nYearlyIntervalCycler.tolist must specify an ending date\n"
-                "either when initializing the YearlyIntervalCycler object with `end=` or\n"
+                "\nDateIntervalCycler.tolist must specify an ending date\n"
+                "either when initializing the DateIntervalCycler object with `end=` or\n"
                 "or by passing `end_override` into this function."
             )
         cad = self.copy()  # No reset, but do a shallow copy
@@ -946,7 +944,7 @@ class YearlyIntervalCycler:
         """
         if p > self._dim:
             raise RuntimeError(
-                "\nCode error, bad index passed to YearlyIntervalCycler._to_datetime(p)\n"
+                "\nCode error, bad index passed to DateIntervalCycler._to_datetime(p)\n"
                 f"p > len(cycles), which is {p} > {self._dim}\n"
             )
         if y is None:
@@ -970,7 +968,7 @@ class YearlyIntervalCycler:
 
     def _start_less_end_check(self):
         if self._last_end_date is not None and self._last_end_date < self._first_start_date:
-            raise ValueError("YearlyIntervalCycler requires that the start date be strictly less than the end date.")
+            raise ValueError("DateIntervalCycler requires that the start date be strictly less than the end date.")
 
     def _p_next(self):
         """Internal function to move cycle index forward."""
@@ -1001,7 +999,7 @@ class YearlyIntervalCycler:
         """
         if p < 0 or p > self._dim:
             raise RuntimeError(
-                "\nCode error, bad index passed to YearlyIntervalCycler._get_end_of_feb_check_date(p)\n"
+                "\nCode error, bad index passed to DateIntervalCycler._get_end_of_feb_check_date(p)\n"
                 f"Index must be between 0 and {self._dim}, but received {p}\n"
             )
         y = self._y
@@ -1166,18 +1164,18 @@ class YearlyIntervalCycler:
                 sp = self._len
             if stp is not None:
                 raise IndexError(
-                    "\nYearlyIntervalCycler: index does not support a step/stride.\n"
+                    "\nDateIntervalCycler: index does not support a step/stride.\n"
                     'Requested slice index: "' + str(ind) + '"    ->(start, stop, step)\n'
                 )
             if not isinstance(st, int) or not isinstance(sp, int):
                 raise IndexError(
-                    "\nYearlyIntervalCycler: index slices may only be integers.\n"
+                    "\nDateIntervalCycler: index slices may only be integers.\n"
                     'Requested slice index: "' + str(ind) + '"    ->(start, stop, step)\n'
                 )
             if not self._has_last_end_date:
                 if st < 0 or sp < 0 or sp >= self._len:
                     raise IndexError(
-                        "\nYearlyIntervalCycler: index out of range.\n"
+                        "\nDateIntervalCycler: index out of range.\n"
                         "If last_interval_end is None, then\n"
                         "the end index must be specified and negative indices are not allowed.\n"
                         'Requested slice index: "' + str(ind) + '"    ->(start, stop, step)\n'
@@ -1206,12 +1204,12 @@ class YearlyIntervalCycler:
         if isinstance(ind, dt.datetime) or isinstance(ind, dt.date):
             return self.index_from_date(ind)
 
-        raise IndexError(f"\nYearlyIntervalCycler: unsupported index:\n{ind}\n")
+        raise IndexError(f"\nDateIntervalCycler: unsupported index:\n{ind}\n")
 
-    def __copy__(self) -> "YearlyIntervalCycler":
+    def __copy__(self) -> "DateIntervalCycler":
         return self.copy()
 
-    def __deepcopy__(self, unused=None) -> "YearlyIntervalCycler":
+    def __deepcopy__(self, unused=None) -> "DateIntervalCycler":
         return self.copy(shallow_copy_cycles=False)
 
     def __str__(self) -> str:
@@ -1225,17 +1223,17 @@ class YearlyIntervalCycler:
 
     def __repr__(self) -> str:
         """
-        Return a detailed string representation of the YearlyIntervalCycler.
+        Return a detailed string representation of the DateIntervalCycler.
 
         Returns:
-            str: The detailed string representation of the YearlyIntervalCycler.
+            str: The detailed string representation of the DateIntervalCycler.
         """
         if self._dim < 7:
             cy = str(self.cycles.tolist())
         else:
             cy = f"[{self.cycles[0]}, {self.cycles[1]}, ..., {self.cycles[-2]}, {self.cycles[-1]}]"
 
-        s = f"YearlyIntervalCycler(cycles={cy}, start={self._first_start_date.strftime('%Y-%m-%d')}, "
+        s = f"DateIntervalCycler(cycles={cy}, start={self._first_start_date.strftime('%Y-%m-%d')}, "
         if self._has_last_end_date:
             s += f"end={self._last_end_date.strftime('%Y-%m-%d')})"
         else:
@@ -1271,8 +1269,8 @@ class YearlyIntervalCycler:
             return self.interval
         else:
             raise RuntimeError(
-                "\nnext(YearlyIntervalCycler) is only allowed initialized"
-                "and/or YearlyIntervalCycler.reset with start_before_first_interval=True"
+                "\nnext(DateIntervalCycler) is only allowed initialized"
+                "and/or DateIntervalCycler.reset with start_before_first_interval=True"
             )
         # rng = self.interval
         # if self.next() < 2:  # 0 or 1, indicates interval is still valid
@@ -1305,15 +1303,15 @@ if __name__ == "__main__":
         (6, 1),  # Duplicate should be dropped
     ]
 
-    cad = YearlyIntervalCycler(cycles, dt.datetime(2000, 3, 1))
+    cad = DateIntervalCycler(cycles, dt.datetime(2000, 3, 1))
     assert cad.next_get()[0] == dt.datetime(2000, 6, 1)
     assert cad.next_get()[0] == dt.datetime(2001, 6, 1)
     assert cad.next_get()[0] == dt.datetime(2002, 6, 1)
-    cad = YearlyIntervalCycler(cycles, dt.datetime(2000, 7, 1))
+    cad = DateIntervalCycler(cycles, dt.datetime(2000, 7, 1))
     assert cad.next_get()[0] == dt.datetime(2001, 6, 1)
     assert cad.next_get()[0] == dt.datetime(2002, 6, 1)
     assert cad.next_get()[0] == dt.datetime(2003, 6, 1)
-    cad = YearlyIntervalCycler(cycles, dt.datetime(2000, 3, 1), dt.datetime(2019, 7, 1))
+    cad = DateIntervalCycler(cycles, dt.datetime(2000, 3, 1), dt.datetime(2019, 7, 1))
     lst = cad.tolist()
     assert lst == [
         (dt.datetime.strptime(start_date, "%Y-%m-%d"), dt.datetime.strptime(end_date, "%Y-%m-%d"))
@@ -1342,7 +1340,7 @@ if __name__ == "__main__":
         ]
     ]
 
-    cad = YearlyIntervalCycler(cycles, dt.datetime(2000, 7, 1), dt.datetime(2019, 2, 1))
+    cad = DateIntervalCycler(cycles, dt.datetime(2000, 7, 1), dt.datetime(2019, 2, 1))
     lst = cad.tolist()
     assert lst == [
         (dt.datetime.strptime(start_date, "%Y-%m-%d"), dt.datetime.strptime(end_date, "%Y-%m-%d"))
@@ -1369,44 +1367,44 @@ if __name__ == "__main__":
         ]
     ]
 
-    cad = YearlyIntervalCycler.from_year(cycles, 1960)
+    cad = DateIntervalCycler.from_year(cycles, 1960)
     assert cad.next_get()[0] == dt.datetime(1961, 6, 1)
     assert cad.next_get()[0] == dt.datetime(1962, 6, 1)
     assert cad.next_get()[0] == dt.datetime(1963, 6, 1)
 
-    cad = YearlyIntervalCycler.with_monthly(dt.datetime(2000, 3, 1))
+    cad = DateIntervalCycler.with_monthly(dt.datetime(2000, 3, 1))
     assert cad.next_get()[0] == dt.datetime(2000, 4, 1)
     assert cad.next_get()[0] == dt.datetime(2000, 5, 1)
     assert cad.next_get()[0] == dt.datetime(2000, 6, 1)
 
-    cad = YearlyIntervalCycler.with_monthly_end(dt.datetime(2000, 3, 1))
+    cad = DateIntervalCycler.with_monthly_end(dt.datetime(2000, 3, 1))
     assert cad.next_get()[0] == dt.datetime(2000, 3, 31)
     assert cad.next_get()[0] == dt.datetime(2000, 4, 30)
     assert cad.next_get()[0] == dt.datetime(2000, 5, 31)
 
-    cad = YearlyIntervalCycler.with_daily(dt.datetime(2000, 2, 27))
+    cad = DateIntervalCycler.with_daily(dt.datetime(2000, 2, 27))
     assert cad.next_get()[0] == dt.datetime(2000, 2, 28)
     assert cad.next_get()[0] == dt.datetime(2000, 2, 29)
     assert cad.next_get()[0] == dt.datetime(2000, 3, 1)
     assert cad.next_get()[0] == dt.datetime(2000, 3, 2)
 
-    cad = YearlyIntervalCycler.with_daily(dt.datetime(2001, 2, 27))
+    cad = DateIntervalCycler.with_daily(dt.datetime(2001, 2, 27))
     assert cad.next_get()[0] == dt.datetime(2001, 2, 28)
     assert cad.next_get()[0] == dt.datetime(2001, 3, 1)
     assert cad.next_get()[0] == dt.datetime(2001, 3, 2)
 
-    cad = YearlyIntervalCycler.with_daily(dt.datetime(2000, 3, 1))
+    cad = DateIntervalCycler.with_daily(dt.datetime(2000, 3, 1))
     assert cad.next_get()[0] == dt.datetime(2000, 3, 2)
     assert cad.next_get()[0] == dt.datetime(2000, 3, 3)
     assert cad.next_get()[0] == dt.datetime(2000, 3, 4)
 
     try:
-        cad = YearlyIntervalCycler.with_daily(dt.datetime(2000, 3, 1), dt.datetime(2000, 1, 1))
+        cad = DateIntervalCycler.with_daily(dt.datetime(2000, 3, 1), dt.datetime(2000, 1, 1))
     except ValueError:
         pass
 
     try:
-        lst = YearlyIntervalCycler.with_daily(dt.datetime(2000, 1, 1)).tolist(
+        lst = DateIntervalCycler.with_daily(dt.datetime(2000, 1, 1)).tolist(
             start_override=dt.datetime(2000, 3, 1), end_override=dt.datetime(2000, 1, 1)
         )
     except ValueError:
@@ -1415,7 +1413,7 @@ if __name__ == "__main__":
     DUMMY_START = dt.datetime(2000, 1, 1)
     DUMMY_END = dt.datetime(2005, 1, 1)
 
-    cad = YearlyIntervalCycler.with_daily(DUMMY_START, DUMMY_END)
+    cad = DateIntervalCycler.with_daily(DUMMY_START, DUMMY_END)
     lst = cad.tolist()
     ind = 0
     for date0, date1 in cad:
@@ -1440,7 +1438,7 @@ if __name__ == "__main__":
         (10, 1),
     ]
 
-    cad = YearlyIntervalCycler.from_year(cycles, year_start)
+    cad = DateIntervalCycler.from_year(cycles, year_start)
     cad.next()
     cad.next()
     assert cad.interval_start == dt.datetime(1950, 7, 1)
@@ -1511,11 +1509,11 @@ if __name__ == "__main__":
         (10, 1),
     ]
 
-    cad = YearlyIntervalCycler.from_year(cycles, 2000)
+    cad = DateIntervalCycler.from_year(cycles, 2000)
 
     assert (cad.cycles == np.array([(1, 1), (4, 1), (4, 3), (4, 5), (7, 1), (10, 1)], dtype=int)).all()
 
-    cad = YearlyIntervalCycler.with_monthly(DUMMY_START)
+    cad = DateIntervalCycler.with_monthly(DUMMY_START)
     assert (
         cad.cycles
         == np.array(
@@ -1524,7 +1522,7 @@ if __name__ == "__main__":
         )
     ).all()
 
-    cad = YearlyIntervalCycler.with_monthly_end(DUMMY_START)
+    cad = DateIntervalCycler.with_monthly_end(DUMMY_START)
     assert (
         cad.cycles
         == np.array(
@@ -1546,7 +1544,7 @@ if __name__ == "__main__":
         )
     ).all()
 
-    cad = YearlyIntervalCycler.with_daily(DUMMY_START)
+    cad = DateIntervalCycler.with_daily(DUMMY_START)
 
     assert cad.interval_start == DUMMY_START
 
@@ -1606,7 +1604,7 @@ if __name__ == "__main__":
     start = dt.datetime(1950, 3, 1)
     end = dt.datetime(1970, 11, 1)
 
-    cad = YearlyIntervalCycler(cycles, start, end)
+    cad = DateIntervalCycler(cycles, start, end)
 
     assert cad.interval_start == dt.datetime(1950, 3, 1)
     assert cad.interval_end == dt.datetime(1950, 4, 1)
@@ -1625,7 +1623,7 @@ if __name__ == "__main__":
 
     start = dt.datetime(1952, 2, 1)
     end = dt.datetime(2020, 11, 1)
-    cad = YearlyIntervalCycler.with_daily(start, end)
+    cad = DateIntervalCycler.with_daily(start, end)
 
     assert cad.interval_start == start
     assert cad.interval_end == dt.datetime(1952, 2, 2)
@@ -1678,7 +1676,7 @@ if __name__ == "__main__":
 
     start = dt.datetime(2000, 2, 1)
     end = dt.datetime(2020, 11, 1)
-    cad = YearlyIntervalCycler.with_daily(start, end)
+    cad = DateIntervalCycler.with_daily(start, end)
 
     dd = daily_dates(start)
     for i in range(12000):  # Check about 30 years of daily
@@ -1799,7 +1797,7 @@ if __name__ == "__main__":
         it += 1
         print(f"   2M Test {it} of {dm}")
         for end in end_list:
-            cad = YearlyIntervalCycler(cycles, start, end)
+            cad = DateIntervalCycler(cycles, start, end)
             ind = 0
             e_old = start
             for s, e in cad:
@@ -1866,7 +1864,7 @@ if __name__ == "__main__":
         it += 1
         print(f"   D Test {it} of {dm}")
         for end in end_list:
-            cad = YearlyIntervalCycler.with_daily(start, end)
+            cad = DateIntervalCycler.with_daily(start, end)
             ind = 0
             e_old = start
             for s, e in cad:
@@ -1920,7 +1918,7 @@ if __name__ == "__main__":
         it += 1
         print(f"   SD Test {it} of {dm}")
         for end in end_list:
-            cad = YearlyIntervalCycler(cycles, start, end)
+            cad = DateIntervalCycler(cycles, start, end)
             ind = 0
             e_old = start
             for s, e in cad:
