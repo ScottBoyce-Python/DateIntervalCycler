@@ -10,7 +10,7 @@ YearlyIntervalCycler(
         )
 """
 
-from typing import Sequence, Union, Optional
+from typing import Sequence, Union, Optional, Iterator
 import datetime as dt
 import numpy as np
 
@@ -70,51 +70,50 @@ class YearlyIntervalCycler:
                                             If True, then it requires two calls to next() to get the second interval.
 
     Attributes:
-        size (int): Returns the number of intervals. If last_interval_end is None, returns MAX_INTERVAL.
+        cycles (np.ndarray): Immutable numpy array whose rows are the (month, day) that each interval cycles through.
 
-        first_interval_start (dt): Returns the start date of the first interval.
-        last_interval_end (Union[dt, None]): Returns the end date of the last interval, or None if not set.
+        size (int): The number of intervals from first_interval_start to last_interval_end.
+                    If last_interval_end is None, returns MAX_INTERVAL.
 
-        index (int): Returns the current interval index.
+        first_interval_start (dt): The start date of the first interval.
+        last_interval_end (Union[dt, None]): The end date of the last interval, or None if not set.
 
-        interval (tuple[dt, dt]): Returns the current interval start and end dates.
-        interval_start (dt): Returns the start date of the current interval.
-        interval_end (dt): Returns the end date of the current interval.
-        interval_length (float): Returns the number of days between interval_end and interval_start.
+        index (int): The current interval index.
 
-        cycles (np.ndarray): Numpy array of (month, day) that each interval cycles through.
+        interval (tuple[dt, dt]): The current interval start and end dates.
+        interval_start (dt): The start date of the current interval.
+        interval_end (dt): The end date of the current interval.
+        interval_length (float): The number of days between interval_end and interval_start.
+
 
         MONTH_DAYS_LEAP (np.ndarray): Days in each month of a leap year.
         MONTH_DAYS_NOLEAP (np.ndarray): Days in each month of a non-leap year.
-        MAX_INTERVAL (int): Maximum number of allowed intervals.length
+        MAX_INTERVAL (int): Maximum number of allowed intervals.
 
 
 
     Methods:
 
         from_year(cycles, year_start, starting_cycle_index=0, year_end=None, ending_cycle_index=0):
-            Create a YearlyIntervalCycler from a starting year in cycles index.
+            Create a YearlyIntervalCycler from a starting year and cycles index.
 
         with_monthly(first_interval_start, last_interval_end=None):
-            Create a YearlyIntervalCycler with monthly intervals starting on the first of each month.
+            Create a YearlyIntervalCycler with monthly interval's starting on the first of each month.
 
         with_monthly_end(first_interval_start, last_interval_end=None):
-            Create a YearlyIntervalCycler with monthly intervals ending on the last day of each month.
+            Create a YearlyIntervalCycler with monthly interval's ending on the last day of each month.
 
         with_daily(first_interval_start, last_interval_end=None):
             Create a YearlyIntervalCycler with daily intervals.
 
         copy(reset=False, shallow_copy_cycles=True):
-            Creates a copy of the current cycler.
+            Creates a copy of the YearlyIntervalCycler object.
 
         reset(start_before_first_interval=False):
             Resets the current interval to the first interval.
 
-        is_leap(year: int) -> bool:
-            Checks if a given year is a leap year.
-
-        month_days(month: int, leap: bool = False) -> int:
-            Returns the number of days in a given month, considering leap years.
+        tolist(start_override=None, end_override=None, from_current_position=False):
+            Converts the intervals to a list.
 
         set_start_range_date(date, start_before_first_interval=False):
             Sets the start date of the interval range. Changing the start date invokes reset().
@@ -143,8 +142,11 @@ class YearlyIntervalCycler:
         index_from_date(date) -> int:
             Returns the index of the interval that contains the given date.
 
-        tolist(start_override=None, end_override=None, from_current_position=False, as_date=False):
-            Converts the intervals to a list.
+        is_leap(year: int) -> bool:
+            Checks if a given year is a leap year.
+
+        month_days(month: int, leap: bool = False) -> int:
+            Returns the number of days in a given month, considering leap years.
 
     Examples:
         >>> from datetime import datetime
@@ -276,34 +278,64 @@ class YearlyIntervalCycler:
         self.set_end_range_date(last_interval_end)
 
     @property
-    def size(self):
+    def size(self) -> int:
+        """
+        Returns the number of intervals. If last_interval_end is None,
+        returns YearlyIntervalCycler.MAX_INTERVAL.
+
+        Returns:
+            int: The number of intervals.
+        """
         return self._len
 
     @property
-    def first_interval_start(self):
+    def first_interval_start(self) -> dt.datetime:
+        """
+        Get the start date of the first interval.
+
+        Returns:
+            dt.datetime: The start date of the first interval.
+        """
         return self._first_start_date
 
     @property
-    def last_interval_end(self):
+    def last_interval_end(self) -> Union[dt.datetime, None]:
+        """
+        Get the end date of the last interval.
+
+        Returns:
+            Union[dt.datetime, None]: The end date of the last interval.
+        """
         return self._last_end_date
 
     @property
-    def index(self):
+    def index(self) -> int:
+        """
+        Get the current interval index.
+
+        Returns:
+            int: The current interval index.
+        """
         return self._ind
 
     @property
     def interval(self) -> tuple[dt.datetime, dt.datetime]:
-        """Returns a tuple of the current cycle interval start and end dates."""
+        """
+        Get the current interval start and end dates.
+
+        Returns:
+            tuple[dt.datetime, dt.datetime]: The start and end dates of the current interval.
+        """
         return self.interval_start, self.interval_end
 
     @property
-    def interval_length(self) -> float:
-        """Returns the length in days of the current interval."""
-        return (self.interval_end - self.interval_start).total_seconds() / 86400.0
-
-    @property
     def interval_start(self) -> dt.datetime:
-        """Returns the current cycle interval start date as a datetime object."""
+        """
+        Get the start date of the current interval.
+
+        Returns:
+            dt.datetime: The start date of the current interval.
+        """
         if self._at_first_interval:
             return self._first_start_date
         if self._end_of_feb_check:
@@ -313,7 +345,12 @@ class YearlyIntervalCycler:
 
     @property
     def interval_end(self) -> dt.datetime:
-        """Returns the current cycle interval end date as a datetime object."""
+        """
+        Get the end date of the current interval.
+
+        Returns:
+            dt.datetime: The end date of the current interval.
+        """
         if self._at_last_interval:
             return self._last_end_date
         if self._at_first_interval:
@@ -324,6 +361,16 @@ class YearlyIntervalCycler:
             return self._get_end_of_feb_check_date(self._p + 1)
         return self._to_datetime(self._p + 1)
 
+    @property
+    def interval_length(self) -> float:
+        """
+        Get the length of the current interval in days.
+
+        Returns:
+            float: The length of the current interval in days.
+        """
+        return (self.interval_end - self.interval_start).total_seconds() / 86400.0
+
     @classmethod
     def from_year(
         cls,
@@ -332,7 +379,24 @@ class YearlyIntervalCycler:
         starting_cycle_index=0,
         year_end: Optional[int] = None,
         ending_cycle_index: Optional[int] = 0,
-    ):
+    ) -> "YearlyIntervalCycler":
+        """
+        Create a YearlyIntervalCycler from a starting year and cycles index.
+        Equivalent to:
+           YearlyIntervalCycler(cycles, dt.datetime(year_start, *cycles[starting_cycle_index]))
+
+        Args:
+            cycles (Sequence[tuple[int, int]]): Sequence of (month, day) tuples defining the interval cycles.
+            year_start (int): The year assigned to the start of the first interval.
+            starting_cycle_index (int, optional): Index of cycle that is the month and day assigned
+                                                  to the start of the first interval. Defaults to 0.
+            year_end (Optional[int], optional): The year assigned to the end of the last interval. Defaults to None.
+            ending_cycle_index (Optional[int], optional):  Index of cycle that is the month and day assigned
+                                                           to the end of the last interval. Defaults to 0.
+
+        Returns:
+            YearlyIntervalCycler: The initialized YearlyIntervalCycler object.
+        """
         cycles = _intervals_to_ndarray(cycles)
         m, d = cycles[starting_cycle_index]
         start = dt.datetime(year_start, m, d)
@@ -349,7 +413,18 @@ class YearlyIntervalCycler:
         cls,
         first_interval_start: Union[dt.datetime, dt.date],
         last_interval_end: Union[None, dt.datetime, dt.date] = None,
-    ):
+    ) -> "YearlyIntervalCycler":
+        """
+        Create a YearlyIntervalCycler with monthly intervals starting on the first of each month.
+
+        Args:
+            first_interval_start (Union[dt.datetime, dt.date]): The start date of the first interval.
+            last_interval_end (Union[None, dt.datetime, dt.date], optional): The end date of the last interval.
+                                                                             Defaults to None.
+
+        Returns:
+            YearlyIntervalCycler: The initialized YearlyIntervalCycler object with monthly intervals.
+        """
         return cls([(m, 1) for m in range(1, 13)], first_interval_start, last_interval_end)
 
     @classmethod
@@ -357,7 +432,18 @@ class YearlyIntervalCycler:
         cls,
         first_interval_start: Union[dt.datetime, dt.date],
         last_interval_end: Union[None, dt.datetime, dt.date] = None,
-    ):
+    ) -> "YearlyIntervalCycler":
+        """
+        Create a YearlyIntervalCycler with monthly interval's ending on the last day of each month.
+
+        Args:
+            first_interval_start (Union[dt.datetime, dt.date]): The start date of the first interval.
+            last_interval_end (Union[None, dt.datetime, dt.date], optional): The end date of the last interval.
+                                                                             Defaults to None.
+
+        Returns:
+            YearlyIntervalCycler: The initialized YearlyIntervalCycler object with monthly interval's ending on the last day of each month.
+        """
         return cls([(m, _month_days_29[m]) for m in range(1, 13)], first_interval_start, last_interval_end)
 
     @classmethod
@@ -365,7 +451,18 @@ class YearlyIntervalCycler:
         cls,
         first_interval_start: Union[dt.datetime, dt.date],
         last_interval_end: Union[None, dt.datetime, dt.date] = None,
-    ):
+    ) -> "YearlyIntervalCycler":
+        """
+        Create a YearlyIntervalCycler with daily intervals.
+
+        Args:
+            first_interval_start (Union[dt.datetime, dt.date]): The start date of the first interval.
+            last_interval_end (Union[None, dt.datetime, dt.date], optional): The end date of the last interval.
+                                                                             Defaults to None.
+
+        Returns:
+            YearlyIntervalCycler: The initialized YearlyIntervalCycler object with daily intervals.
+        """
         return cls(
             [(m, d) for m in range(1, 13) for d in range(1, _month_days_29[m] + 1)],
             first_interval_start,
@@ -373,11 +470,30 @@ class YearlyIntervalCycler:
         )
 
     @staticmethod
-    def is_leap(year: int):
+    def is_leap(year: int) -> bool:
+        """
+        Check if a given year is a leap year.
+
+        Args:
+            year (int): The year to check.
+
+        Returns:
+            bool: True if the year is a leap year, False otherwise.
+        """
         return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
 
     @staticmethod
-    def month_days(month, leap: bool = False):
+    def month_days(month: int, leap: bool = False) -> int:
+        """
+        Get the number of days in a given month, considering leap years.
+
+        Args:
+            month (int): The month to check.
+            leap (bool, optional): Flag to consider leap year. Defaults to False.
+
+        Returns:
+            int: The number of days in the month.
+        """
         if month < 1 or 12 < month:
             raise ValueError(
                 f"\nYearlyIntervalCycler.month_days: month must be between 1 and 12, but received: {month}"
@@ -386,8 +502,17 @@ class YearlyIntervalCycler:
             return _month_days_29[month]
         return _month_days_28[month]
 
-    def copy(self, reset: bool = False, shallow_copy_cycles=True):
-        """Returns a new instance of YearlyIntervalCycler that has the exact same state as the current."""
+    def copy(self, reset: bool = False, shallow_copy_cycles=True) -> "YearlyIntervalCycler":
+        """
+        Creates a copy of the YearlyIntervalCycler object.
+
+        Args:
+            reset (bool, optional): Reset the copy to the first interval. Defaults to False.
+            shallow_copy_cycles (bool, optional): Create a shallow copy of cycles. Defaults to True.
+
+        Returns:
+            YearlyIntervalCycler: The copied YearlyIntervalCycler object.
+        """
         copy_flag = -1 if shallow_copy_cycles else 1
 
         cad = YearlyIntervalCycler(
@@ -417,6 +542,13 @@ class YearlyIntervalCycler:
         return cad
 
     def set_start_range_date(self, date: Union[dt.datetime, dt.date], start_before_first_interval: bool = False):
+        """
+        Set the start date of the interval range.
+
+        Args:
+            date (Union[dt.datetime, dt.date]): The start date of the interval range.
+            start_before_first_interval (bool, optional): Flag to start before the first interval. Defaults to False.
+        """
         if type(date) is not dt.datetime:
             date = dt.datetime(date.year, date.month, date.day)
         self._first_start_date = date
@@ -432,6 +564,12 @@ class YearlyIntervalCycler:
             self._len = 1
 
     def set_end_range_date(self, date: Union[None, dt.datetime, dt.date]):
+        """
+        Set the end date of the interval range.
+
+        Args:
+            date (Union[None, dt.datetime, dt.date]): The end date of the interval range.
+        """
         if date is not None and type(date) is not dt.datetime:
             date = dt.datetime(date.year, date.month, date.day)
 
@@ -450,7 +588,16 @@ class YearlyIntervalCycler:
             self._len = YearlyIntervalCycler.MAX_INTERVAL
 
     def reset(self, start_before_first_interval: bool = False, return_self: bool = False, *, set_p0: bool = False):
-        """Resets YearlyIntervalCycler to the first interval."""
+        """
+        Reset the YearlyIntervalCycler to the first interval.
+
+        Args:
+            start_before_first_interval (bool, optional): Flag to start before the first interval. Defaults to False.
+                                                          If False, then first call to next() moves to the second interval.
+                                                          If True, then it requires two calls to next() to get the second interval.
+            return_self (bool, optional): Flag to return self. Defaults to False.
+            set_p0 (bool, optional): Internal flag to update self._p0 and self._p0_date. Defaults to False.
+        """
         self._y = self._first_start_date.year
 
         if set_p0:
@@ -474,17 +621,49 @@ class YearlyIntervalCycler:
             self._at_first_interval = -1 if start_before_first_interval else 1
             self._at_last_interval = 0
 
-    def next_get(self, allowStopIteration=False) -> int:
+    def next_get(self, allowStopIteration=False) -> tuple[dt.datetime, dt.datetime]:
+        """
+        Advance to the next interval and return its start and end dates.
+        If at the last interval, then continues to return the last interval, unless
+        allowStopIteration is True, then raises a StopIteration exception.
+
+        Args:
+            allowStopIteration (bool, optional): Flag to allow StopIteration exception if current
+                                                 interval is the last. Defaults to False.
+
+        Returns:
+            tuple[dt.datetime, dt.datetime]: The start and end dates of the next interval.
+        """
         self.next(allowStopIteration)
         return self.interval_start, self.interval_end
 
-    def back_get(self, allowStopIteration=False) -> int:
+    def back_get(self, allowStopIteration=False) -> tuple[dt.datetime, dt.datetime]:
+        """
+        Move back to the previous interval and return its start and end dates.
+        If at the first interval, then continues to return the first interval, unless
+        allowStopIteration is True, then raises a StopIteration exception.
+
+        Args:
+            allowStopIteration (bool, optional): Flag to allow StopIteration exception if current
+                                                 interval is the first. Defaults to False.
+
+        Returns:
+            tuple[dt.datetime, dt.datetime]: The start and end dates of the previous interval.
+        """
         self.back(allowStopIteration)
         return self.interval_start, self.interval_end
 
     def next(self, allowStopIteration=False) -> int:
-        """Advances to the next date interval.
-        Returns 0 if successful, otherwise returns the the fail count."""
+        """
+        Advance to the next date interval.
+
+        Args:
+            allowStopIteration (bool, optional): Flag to allow StopIteration exception if current
+                                                 interval is the last. Defaults to False.
+
+        Returns:
+            int: 0 if successful, otherwise the fail count.
+        """
         if self._at_last_interval:
             self._at_last_interval += 1
             if allowStopIteration:
@@ -519,7 +698,16 @@ class YearlyIntervalCycler:
         return 0
 
     def back(self, allowStopIteration=False) -> int:
-        """Moves back to the previous date, wrapping around to the previous year if necessary."""
+        """
+        Move back to the previous date interval, wrapping around to the previous year if necessary.
+
+        Args:
+            allowStopIteration (bool, optional): Flag to allow StopIteration exception if current
+                                                 interval is the first. Defaults to False.
+
+        Returns:
+            int: 0 if successful, otherwise the fail count.
+        """
         if self._at_first_interval:
             if self._at_first_interval == -1:  # Flag to indicate before start of intervals, but requested back?
                 self._at_first_interval = 1
@@ -544,7 +732,20 @@ class YearlyIntervalCycler:
                 self._p_back()  # p -= 1 because Feb 29 is invalid for this year and 28 is defined
         return 0
 
-    def iter(self, reset_to_start=False):
+    def iter(self, reset_to_start=False) -> Iterator[tuple[dt.datetime, dt.datetime]]:
+        """
+        Returns an iterator for the intervals. The first next call returns the
+        current interval start and end dates. Each subsequent next call returns the
+        next interval's start and end date. This continues until the last interval.
+        If last_interval_end is None, then iterator will continue indefinitely.
+
+        Args:
+            reset_to_start (bool, optional): Flag to have the iterator start at the first interval,
+                                             otherwise returns current interval. Defaults to False.
+
+        Returns:
+            Iterator[tuple[dt.datetime, dt.datetime]]: The iterator object.
+        """
         if self._at_first_interval != 0 and self._at_last_interval != 0:
             return self.interval
         if reset_to_start:
@@ -564,7 +765,19 @@ class YearlyIntervalCycler:
     def index_to_interval(
         self, index, only_start: bool = False, only_end: bool = False
     ) -> Union[dt.datetime, tuple[dt.datetime, dt.datetime]]:
-        """Given an index, return the corresponding date interval."""
+        """
+        Given an index, return the corresponding date interval.
+
+        Args:
+            index (int): The index of the interval.
+            only_start (bool, optional): Flag to return only the start date.
+                                         Defaults to False.
+            only_end (bool, optional): Flag to return only the end date.
+                                       Defaults to False.
+
+        Returns:
+            Union[dt.datetime, tuple[dt.datetime, dt.datetime]]: The start and end dates of the interval.
+        """
         if only_start and only_end:
             only_start = False
             only_end = False
@@ -618,7 +831,15 @@ class YearlyIntervalCycler:
         return self._index_to_interval_return(index, y, only_start, only_end)
 
     def index_from_date(self, date: Union[dt.datetime, dt.date]) -> int:
-        """Returns the index of the interval that contains the date."""
+        """
+        Return the index of the interval that contains the given date.
+
+        Args:
+            date (Union[dt.datetime, dt.date]): The date to find the index for.
+
+        Returns:
+            int: The index of the interval that contains the date.
+        """
         if not isinstance(date, dt.datetime):
             date = dt.datetime(date.year, date.month, date.day)
         if date < self._first_start_date:
@@ -662,8 +883,23 @@ class YearlyIntervalCycler:
         start_override: Union[None, dt.datetime, dt.date] = None,
         end_override: Union[None, dt.datetime, dt.date] = None,
         from_current_position: bool = False,
-        as_date: bool = False,
-    ):
+    ) -> list[tuple[dt.datetime, dt.datetime]]:
+        """
+        Convert the intervals to a list of datetime tuples.
+        The list can use the current interval as the start or use all the intervals.
+        The list can optionally specify a different starting and/or ending date.
+        If last_interval_end is None, then end_override must be specified,
+        so there is an end to the list.
+
+        Args:
+            start_override (Union[None, dt.datetime, dt.date], optional): Override for the start date of the list. Defaults to None.
+            end_override (Union[None, dt.datetime, dt.date], optional): Override for the end date of the list. Defaults to None.
+            from_current_position (bool, optional): Flag to start list from current interval. Defaults to False.
+
+        Returns:
+            list[tuple[dt.datetime, dt.datetime]]: The YearlyIntervalCycler object as a list.
+        """
+
         if not self._has_last_end_date and end_override is None:
             raise ValueError(
                 "\nYearlyIntervalCycler.tolist must specify an ending date\n"
@@ -686,19 +922,29 @@ class YearlyIntervalCycler:
             cad._len = -999  # no need to recalculate for dummy variable
             cad._start_less_end_check()
 
-        if as_date:
-            return [(d0.date(), d1.date()) for (d0, d1) in cad]
         return [it for it in cad]
 
     def _lock_cycles(self):
-        # Locks the cycles array so it cannot be altered, even when shadow copied.
+        """Internal method that locks the cycles array to prevent modification."""
         self.cycles.setflags(write=False)
 
     def _unlock_cycles(self):
-        # Dangerous, allows editing cycles array
+        """Internal method that unlocks the cycles array to allow modification.
+        Dangerous, allows editing cycles array"""
         self.cycles.setflags(write=True)
 
     def _to_datetime(self, p, y: Optional[int] = None) -> dt.datetime:
+        """
+        Internal method that converts a cycle index to a datetime object using current interval's
+        year or specified year.
+
+        Args:
+            p (int): The cycle index.
+            y (Optional[int], optional): The year. Defaults to None.
+
+        Returns:
+            dt.datetime: The corresponding datetime object.
+        """
         if p > self._dim:
             raise RuntimeError(
                 "\nCode error, bad index passed to YearlyIntervalCycler._to_datetime(p)\n"
@@ -728,18 +974,32 @@ class YearlyIntervalCycler:
             raise ValueError("YearlyIntervalCycler requires that the start date be strictly less than the end date.")
 
     def _p_next(self):
+        """Internal function to move cycle index forward."""
         self._p += 1
         if self._p == self._dim:
             self._p = 0
             self._y += 1
 
     def _p_back(self):
+        """Internal function to move cycle index backward."""
         self._p -= 1
         if self._p == -1:
             self._p = self._dim - 1
             self._y -= 1
 
-    def _get_end_of_feb_check_date(self, p):
+    def _get_end_of_feb_check_date(self, p) -> dt.datetime:
+        """
+        Internal method that helps return the correct date when cycles contains (2, 29).
+        If a non-leap year then there are two fixes to the date.
+          A) if (2, 28) is not in cycles, then return it as the date
+          B) if (2, 28) is     in cycles, then return the next cycle as the date
+
+        Args:
+            p (int): The cycle index.
+
+        Returns:
+            dt.datetime: The corresponding datetime object.
+        """
         if p < 0 or p > self._dim:
             raise RuntimeError(
                 "\nCode error, bad index passed to YearlyIntervalCycler._get_end_of_feb_check_date(p)\n"
@@ -762,15 +1022,39 @@ class YearlyIntervalCycler:
     def _index_to_interval_return(
         self, p, y, only_start, only_end
     ) -> Union[dt.datetime, tuple[dt.datetime, dt.datetime]]:
-        # Only for use within index_to_interval function.
-        # Does not deal with the first interval correctly
+        """
+        Internal method that simplifies the return from the index_to_interval method
+        if it is NOT the first interval.
+
+        Args:
+            p (int): The cycle index.
+            y (int): The year.
+            only_start (bool): Flag to return only the start date.
+            only_end (bool): Flag to return only the end date.
+
+        Returns:
+            Union[dt.datetime, tuple[dt.datetime, dt.datetime]]: The start and end dates of the interval.
+        """
         if only_start:
             return self._to_datetime(p, y)
         if only_end:
             return self._to_datetime(p + 1, y)
         return self._to_datetime(p, y), self._to_datetime(p + 1, y)
 
-    def _index_to_interval_end_of_feb_check(self, index, only_start, only_end):
+    def _index_to_interval_end_of_feb_check(
+        self, index, only_start, only_end
+    ) -> Union[dt.datetime, tuple[dt.datetime, dt.datetime]]:
+        """
+        Internal method to convert index to interval when cycles contains (2, 28) and (2, 29).
+
+        Args:
+            index (int): The index of the interval.
+            only_start (bool): Flag to return only the start date.
+            only_end (bool): Flag to return only the end date.
+
+        Returns:
+            Union[dt.datetime, tuple[dt.datetime, dt.datetime]]: The start and end dates of the interval.
+        """
         y = self._first_start_date.year
         leap_year = _is_leap(y)
         p = index + self._p0 - 1
@@ -795,6 +1079,15 @@ class YearlyIntervalCycler:
             return self._index_to_interval_return(index + 1, y, only_start, only_end)
 
     def _index_from_date_end_of_feb_check(self, date: Union[dt.datetime, dt.date]) -> int:
+        """
+        Internal method to find index from date when cycles contains (2, 28) and (2, 29).
+
+        Args:
+            date (Union[dt.datetime, dt.date]): The date to find the index for.
+
+        Returns:
+            int: The index of the interval that contains the date.
+        """
         end_date_add = 0
         if self._has_last_end_date and date == self._last_end_date:
             date += dt.timedelta(days=-1)  # ensures it will capture the last interval
@@ -850,22 +1143,46 @@ class YearlyIntervalCycler:
         return ind + end_date_add
 
     def __getitem__(self, ind) -> Union[int, tuple[dt.datetime, dt.datetime]]:
+        """
+        Based on the index (ind) type either return the interval index or interval date start and end.
+        If ind is int, then it is the interval index and the corresponding date interval is returned.
+        If ind is dt.datetime, then it is a date and the corresponding the interval index that
+        contains the date is returned.
+
+        Args:
+            ind (Union[int, dt.datetime, None]): The index that is of interest.
+
+        Returns:
+            Union[int, tuple[dt.datetime, dt.datetime]]: The corresponding interval date or index.
+        """
         if ind is None:
             return self.copy()
         if isinstance(ind, int):
             return self.index_to_interval(ind)
         return self.index_from_date(ind)
 
-    def __copy__(self):
+    def __copy__(self) -> "YearlyIntervalCycler":
         return self.copy()
 
-    def __deepcopy__(self, unused=None):
+    def __deepcopy__(self, unused=None) -> "YearlyIntervalCycler":
         return self.copy(shallow_copy_cycles=False)
 
-    def __str__(self):
+    def __str__(self) -> str:
+        """
+        Return a string representation of the current interval.
+
+        Returns:
+            str: The string representation of the current interval.
+        """
         return f"({self.interval_start.strftime('%Y-%m-%d')}, {self.interval_end.strftime('%Y-%m-%d')})"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
+        """
+        Return a detailed string representation of the YearlyIntervalCycler.
+
+        Returns:
+            str: The detailed string representation of the YearlyIntervalCycler.
+        """
         if self._dim < 7:
             cy = str(self.cycles.tolist())
         else:
@@ -879,13 +1196,29 @@ class YearlyIntervalCycler:
 
         return s
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self._len
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[tuple[dt.datetime, dt.datetime]]:
+        """
+        Returns an iterator that moves through all the intervals from the start.
+
+        Returns:
+            Iterator[tuple[dt.datetime, dt.datetime]]: The iterator object.
+        """
         return self.iter()
 
-    def __next__(self):
+    def __next__(self) -> tuple[dt.datetime, dt.datetime]:
+        """
+        Advance to the next interval and return its start and end dates.
+
+        Returns:
+            tuple[dt.datetime, dt.datetime]: The start and end dates of the next interval.
+
+        Raises:
+            RuntimeError: If the iterator is not properly initialized.
+            StopIteration: If there are no more intervals to iterate over.
+        """
         if self._started_before_first_interval:
             self.next(True)
             return self.interval
