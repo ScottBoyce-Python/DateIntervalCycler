@@ -587,7 +587,7 @@ class YearlyIntervalCycler:
         else:
             self._len = YearlyIntervalCycler.MAX_INTERVAL
 
-    def reset(self, start_before_first_interval: bool = False, return_self: bool = False, *, set_p0: bool = False):
+    def reset(self, start_before_first_interval: bool = False, *, set_p0: bool = False):
         """
         Reset the YearlyIntervalCycler to the first interval.
 
@@ -595,7 +595,6 @@ class YearlyIntervalCycler:
             start_before_first_interval (bool, optional): Flag to start before the first interval. Defaults to False.
                                                           If False, then first call to next() moves to the second interval.
                                                           If True, then it requires two calls to next() to get the second interval.
-            return_self (bool, optional): Flag to return self. Defaults to False.
             set_p0 (bool, optional): Internal flag to update self._p0 and self._p0_date. Defaults to False.
         """
         self._y = self._first_start_date.year
