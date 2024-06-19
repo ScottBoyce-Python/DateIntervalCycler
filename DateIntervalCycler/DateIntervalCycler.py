@@ -1,3 +1,11 @@
+__author__ = "Scott E. Boyce"
+__email__ = "boyce@engineer.com"
+__license__ = "MIT"
+__copyright__ = "Copyright (c) 2024 Scott E. Boyce"
+__maintainer__ = "Scott E. Boyce"
+__status__ = "Development"
+__url__ = "https://github.com/ScottBoyce-Python/DateIntervalCycler"
+
 from typing import Sequence, Union, Optional, Iterator
 import datetime as dt
 import numpy as np
@@ -66,6 +74,9 @@ class DateIntervalCycler:
         first_interval_start (dt): The start date of the first interval.
         last_interval_end (Union[dt, None]): The end date of the last interval, or None if not set.
 
+        at_first_interval(bool): Check if the current interval is the first.
+        at_last_interval(bool): Check if the current interval is the last.
+
         index (int): The current interval index.
 
         interval (tuple[dt, dt]): The current interval start and end dates.
@@ -85,13 +96,13 @@ class DateIntervalCycler:
         from_year(cycles, year_start, starting_cycle_index=0, year_end=None, ending_cycle_index=0):
             Create a DateIntervalCycler from a starting year and cycles index.
 
-        with_monthly(first_interval_start, last_interval_end=None):
+        with_monthly(first_interval_start, last_interval_end=None, start_before_first_interval=False):
             Create a DateIntervalCycler with monthly interval's starting on the first of each month.
 
-        with_monthly_end(first_interval_start, last_interval_end=None):
+        with_monthly_end(first_interval_start, last_interval_end=None, start_before_first_interval=False):
             Create a DateIntervalCycler with monthly interval's ending on the last day of each month.
 
-        with_daily(first_interval_start, last_interval_end=None):
+        with_daily(first_interval_start, last_interval_end=None, start_before_first_interval=False):
             Create a DateIntervalCycler with daily intervals.
 
         copy(reset=False, shallow_copy_cycles=True):
@@ -103,10 +114,10 @@ class DateIntervalCycler:
         tolist(start_override=None, end_override=None, from_current_position=False):
             Converts the intervals to a list.
 
-        set_start_range_date(date, start_before_first_interval=False):
+        set_first_interval_start(first_interval_start, start_before_first_interval=False):
             Sets the start date of the interval range. Changing the start date invokes reset().
 
-        set_end_range_date(date):
+        set_last_interval_end(date):
             Sets the end date of the interval range. It must be greater than first_interval_start.
 
         next(allowStopIteration=False) -> int:
@@ -202,8 +213,13 @@ class DateIntervalCycler:
         Args:
             cycles (Sequence[tuple[int, int]]): Sequence of (month, day) tuples defining the intervals.
             first_interval_start (Union[dt.datetime, dt.date]): The start date of the first interval.
-            last_interval_end (Union[None, dt.datetime, dt.date], optional): The end date of the last interval. Defaults to None.
+            last_interval_end (Union[None, dt.datetime, dt.date], optional): The end date of the last
+                                                                             interval. Defaults to None.
             start_before_first_interval (bool, optional): Flag to start before the first interval. Defaults to False.
+                                                          If False, then first call to next() moves to the second interval.
+                                                          If True, then it requires two calls to next() to get the second interval.
+                                                             This is useful if you need to call next() at the start of a loop,
+                                                             but want the first loop to include the first interval
             _internal_copy_init (int, optional): Internal flag used by class for fast copying. Defaults to 0.
         """
         if _internal_copy_init:
@@ -252,7 +268,7 @@ class DateIntervalCycler:
         # Validate the date intervals and check for leap year considerations
         for i, (vm, vd) in enumerate(cycles):
             if vd < 1 or vm < 1 or vm > 12 or _month_days_29[vm] < vd:
-                raise ValueError(f"DateIntervalCycler: Invalid (month, day) entry at cycles[{i}] = ({vm}, {vd})")
+                raise ValueError(f"\nDateIntervalCycler: Invalid (month, day) entry at cycles[{i}] = ({vm}, {vd})")
 
         p_feb29 = np.where(np.all(self.cycles == FEB29_CHECK, axis=1))[0]
         self._end_of_feb_check = p_feb29.size == 1
@@ -262,8 +278,8 @@ class DateIntervalCycler:
 
         self._end_of_feb_check_has_28 = self._end_of_feb_check and np.any(np.all(self.cycles == FEB28_CHECK, axis=1))
 
-        self.set_start_range_date(first_interval_start, start_before_first_interval)
-        self.set_end_range_date(last_interval_end)
+        self.set_first_interval_start(first_interval_start, start_before_first_interval)
+        self.set_last_interval_end(last_interval_end)
 
     @property
     def size(self) -> int:
@@ -295,6 +311,26 @@ class DateIntervalCycler:
             Union[dt.datetime, None]: The end date of the last interval.
         """
         return self._last_end_date
+
+    @property
+    def at_first_interval(self) -> bool:
+        """
+        Check if the current interval is the first.
+
+        Returns:
+            bool: If current interval is the first.
+        """
+        return self._at_first_interval != 0
+
+    @property
+    def at_last_interval(self) -> Union[dt.datetime, None]:
+        """
+        Check if the current interval is the last.
+
+        Returns:
+            bool: If current interval is the last.
+        """
+        return self._at_last_interval != 0
 
     @property
     def index(self) -> int:
@@ -401,6 +437,7 @@ class DateIntervalCycler:
         cls,
         first_interval_start: Union[dt.datetime, dt.date],
         last_interval_end: Union[None, dt.datetime, dt.date] = None,
+        start_before_first_interval: bool = False,
     ) -> "DateIntervalCycler":
         """
         Create a DateIntervalCycler with monthly intervals starting on the first of each month.
@@ -409,17 +446,21 @@ class DateIntervalCycler:
             first_interval_start (Union[dt.datetime, dt.date]): The start date of the first interval.
             last_interval_end (Union[None, dt.datetime, dt.date], optional): The end date of the last interval.
                                                                              Defaults to None.
+            start_before_first_interval (bool, optional): Flag to start before the first interval. Defaults to False.
+                                                          If False, then first call to next() moves to the second interval.
+                                                          If True, then it requires two calls to next() to get the second interval.
 
         Returns:
             DateIntervalCycler: The initialized DateIntervalCycler object with monthly intervals.
         """
-        return cls([(m, 1) for m in range(1, 13)], first_interval_start, last_interval_end)
+        return cls([(m, 1) for m in range(1, 13)], first_interval_start, last_interval_end, start_before_first_interval)
 
     @classmethod
     def with_monthly_end(
         cls,
         first_interval_start: Union[dt.datetime, dt.date],
         last_interval_end: Union[None, dt.datetime, dt.date] = None,
+        start_before_first_interval: bool = False,
     ) -> "DateIntervalCycler":
         """
         Create a DateIntervalCycler with monthly interval's ending on the last day of each month.
@@ -428,17 +469,26 @@ class DateIntervalCycler:
             first_interval_start (Union[dt.datetime, dt.date]): The start date of the first interval.
             last_interval_end (Union[None, dt.datetime, dt.date], optional): The end date of the last interval.
                                                                              Defaults to None.
+            start_before_first_interval (bool, optional): Flag to start before the first interval. Defaults to False.
+                                                          If False, then first call to next() moves to the second interval.
+                                                          If True, then it requires two calls to next() to get the second interval.
 
         Returns:
             DateIntervalCycler: The initialized DateIntervalCycler object with monthly interval's ending on the last day of each month.
         """
-        return cls([(m, _month_days_29[m]) for m in range(1, 13)], first_interval_start, last_interval_end)
+        return cls(
+            [(m, _month_days_29[m]) for m in range(1, 13)],
+            first_interval_start,
+            last_interval_end,
+            start_before_first_interval,
+        )
 
     @classmethod
     def with_daily(
         cls,
         first_interval_start: Union[dt.datetime, dt.date],
         last_interval_end: Union[None, dt.datetime, dt.date] = None,
+        start_before_first_interval: bool = False,
     ) -> "DateIntervalCycler":
         """
         Create a DateIntervalCycler with daily intervals.
@@ -447,6 +497,9 @@ class DateIntervalCycler:
             first_interval_start (Union[dt.datetime, dt.date]): The start date of the first interval.
             last_interval_end (Union[None, dt.datetime, dt.date], optional): The end date of the last interval.
                                                                              Defaults to None.
+            start_before_first_interval (bool, optional): Flag to start before the first interval. Defaults to False.
+                                                          If False, then first call to next() moves to the second interval.
+                                                          If True, then it requires two calls to next() to get the second interval.
 
         Returns:
             DateIntervalCycler: The initialized DateIntervalCycler object with daily intervals.
@@ -455,6 +508,7 @@ class DateIntervalCycler:
             [(m, d) for m in range(1, 13) for d in range(1, _month_days_29[m] + 1)],
             first_interval_start,
             last_interval_end,
+            start_before_first_interval,
         )
 
     @staticmethod
@@ -527,16 +581,28 @@ class DateIntervalCycler:
 
         return cid
 
-    def set_start_range_date(self, date: Union[dt.datetime, dt.date], start_before_first_interval: bool = False):
+    def set_first_interval_start(
+        self, first_interval_start: Union[dt.datetime, dt.date], start_before_first_interval: bool = False
+    ):
         """
         Set the start date of the interval range.
 
         Args:
-            date (Union[dt.datetime, dt.date]): The start date of the interval range.
+            first_interval_start (Union[dt.datetime, dt.date]): The start date of the first interval.
             start_before_first_interval (bool, optional): Flag to start before the first interval. Defaults to False.
+                                                          If False, then first call to next() moves to the second interval.
+                                                          If True, then it requires two calls to next() to get the second interval.
         """
+        date = first_interval_start
         if type(date) is not dt.datetime:
-            date = dt.datetime(date.year, date.month, date.day)
+            try:
+                date = dt.datetime(date.year, date.month, date.day)
+            except AttributeError:
+                raise ValueError(
+                    "\nDateIntervalCycler.set_first_interval_start: Invalid first_interval_start.\n"
+                    f"Received: {first_interval_start}"
+                )
+
         self._first_start_date = date
         self._at_first_interval = 1
 
@@ -549,15 +615,22 @@ class DateIntervalCycler:
             self._at_last_interval = 1
             self._len = 1
 
-    def set_end_range_date(self, date: Union[None, dt.datetime, dt.date]):
+    def set_last_interval_end(self, last_interval_end: Union[None, dt.datetime, dt.date]):
         """
         Set the end date of the interval range.
 
         Args:
-            date (Union[None, dt.datetime, dt.date]): The end date of the interval range.
+            last_interval_end (Union[None, dt.datetime, dt.date], optional): The end date of the last interval.
         """
+        date = last_interval_end
         if date is not None and type(date) is not dt.datetime:
-            date = dt.datetime(date.year, date.month, date.day)
+            try:
+                date = dt.datetime(date.year, date.month, date.day)
+            except AttributeError:
+                raise ValueError(
+                    "\nDateIntervalCycler.set_last_interval_end: Invalid last_interval_end.\n"
+                    f"Received: {last_interval_end}"
+                )
 
         self._last_end_date = date
         self._has_last_end_date = date is not None
@@ -652,7 +725,7 @@ class DateIntervalCycler:
         if self._at_last_interval:
             self._at_last_interval += 1
             if allowStopIteration:
-                raise StopIteration("DateIntervalCycler.next cannot go beyond the ending date")
+                raise StopIteration("\nDateIntervalCycler.next cannot go beyond the ending date")
             return self._at_last_interval - 1
 
         if self._at_first_interval:
@@ -698,7 +771,7 @@ class DateIntervalCycler:
                 self._at_first_interval = 1
             self._at_first_interval += 1
             if allowStopIteration:
-                raise StopIteration("DateIntervalCycler.back cannot go beyond the starting date.")
+                raise StopIteration("\nDateIntervalCycler.back cannot go beyond the starting date.")
             return self._at_first_interval - 1  # Number of times a StopIteration would have occurred
 
         if self._at_last_interval:
@@ -865,8 +938,8 @@ class DateIntervalCycler:
 
     def tolist(
         self,
-        start_override: Union[None, dt.datetime, dt.date] = None,
-        end_override: Union[None, dt.datetime, dt.date] = None,
+        start_override: Union[None, dt.datetime, dt.date, int] = None,
+        end_override: Union[None, dt.datetime, dt.date, int] = None,
         from_current_position: bool = False,
     ) -> list[tuple[dt.datetime, dt.datetime]]:
         """
@@ -877,8 +950,8 @@ class DateIntervalCycler:
         so there is an end to the list.
 
         Args:
-            start_override (Union[None, dt.datetime, dt.date], optional): Override for the start date of the list. Defaults to None.
-            end_override (Union[None, dt.datetime, dt.date], optional): Override for the end date of the list. Defaults to None.
+            start_override (Union[None, dt.datetime, dt.date, int], optional): Override for the start date of the list. Defaults to None.
+            end_override (Union[None, dt.datetime, dt.date, int], optional): Override for the end date of the list. Defaults to None.
             from_current_position (bool, optional): Flag to start list from current interval. Defaults to False.
 
         Returns:
@@ -894,14 +967,25 @@ class DateIntervalCycler:
         cid = self.copy()  # No reset, but do a shallow copy
 
         if start_override is not None:
-            cid.set_start_range_date(start_override)
+            if isinstance(start_override, int):
+                cid.set_first_interval_start(self[start_override][0])
+            else:
+                cid.set_first_interval_start(start_override)
+
         elif not from_current_position:
             cid.reset()
 
         if end_override is not None:
-            if type(end_override) is not dt.datetime:
-                end_override = dt.datetime(end_override.year, end_override.month, end_override.day)
-
+            if isinstance(end_override, int):
+                end_override = self[end_override][1]
+            elif type(end_override) is not dt.datetime:
+                try:
+                    end_override = dt.datetime(end_override.year, end_override.month, end_override.day)
+                except AttributeError:
+                    raise ValueError(
+                        "\nDateIntervalCycler.set_last_interval_end: Invalid last_interval_end.\n"
+                        f"Received: {end_override}"
+                    )
             cid._last_end_date = end_override
             cid._has_last_end_date = True
             cid._len = -999  # no need to recalculate for dummy variable
@@ -956,7 +1040,7 @@ class DateIntervalCycler:
 
     def _start_less_end_check(self):
         if self._last_end_date is not None and self._last_end_date < self._first_start_date:
-            raise ValueError("DateIntervalCycler requires that the start date be strictly less than the end date.")
+            raise ValueError("\nDateIntervalCycler requires that the start date be strictly less than the end date.")
 
     def _p_next(self):
         """Internal function to move cycle index forward."""
