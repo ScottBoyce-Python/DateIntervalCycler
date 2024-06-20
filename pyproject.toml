@@ -33,6 +33,7 @@ testing = ["pytest", "pytest-xdist"]
 "Source Code" = "https://github.com/yourusername/my_project"
 
 [tool.pytest.ini_options]
+addopts = "-ra -nauto"  
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')"
 ]
@@ -42,7 +43,6 @@ testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*", "Check*"]
 python_functions = ["test_*", "check_*"]
-addopts = "-ra -nauto"  
 # -q supresses comments during testing
 # -ra provides detailed summary after testing
 # addopts = "-ra -q"  
