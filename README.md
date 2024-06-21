@@ -223,14 +223,27 @@ To run tests, install the required packages and execute the following command:
 ```bash
 pip install pytest pytest-xdist
 
-pytest -n auto  # run all tests
+pytest  # run all tests, note options are set in the pyproject.toml file
 
-pytest -n auto -m "not slow"  # skip index tests that are time consuming.
+pytest -m "not slow"  # skip index tests that are time consuming.
 
-pytest -n auto run-slow-skip # runs oringinal slow tests and skips the subset ones, which are reduntant.
+pytest --run-slow-skip # runs oringinal slow tests and skips the subset ones, which are reduntant.
 ```
 
+&nbsp; 
+
+Note, that the [pyproject.toml](pyproject.toml) file is configured to run `pytest` with the following arguments:
+
+```toml
+[tool.pytest.ini_options]
+# agressive parallel options
+addopts = "-ra --dist worksteal -nauto"
+```
+
+
+
 ## License
+
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## Contributing
