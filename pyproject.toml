@@ -33,20 +33,31 @@ testing = ["pytest", "pytest-xdist"]
 "Source Code" = "https://github.com/yourusername/my_project"
 
 [tool.pytest.ini_options]
-addopts = "-ra -nauto"  
+# agressive parallel options
+addopts = "-ra --dist worksteal -nauto"  # Defaults to parallel tests, comment out if you want serial.
+# addopts="-ra --dist worksteal -nauto --run-slow-skip"  # run skip tests and skip subset tests
+# addopts="-ra --dist worksteal -nauto -m 'not slow'"  # on run fast tests
+# addopts = "-ra --dist worksteal -nauto -q"  # supress output during testing
+
+# Regular parallel options
+# addopts = "-ra -nauto"  # Defaults to parallel tests, comment out if you want serial.
+# addopts="-ra -nauto --run-slow-skip"  # run skip tests and skip subset tests
+# addopts="-ra -nauto -m 'not slow'"  # on run fast tests
+# addopts = "-ra -nauto -q"  # supress output during testing
+
+
 markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')"
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "subtest: marks tests as beings a subset of a slow_skip test that is created for fast parallel executaion, skipped if running slow_skip.",
+    "slow_skip: marks tests as slow_skip, which are also marked with skip\n(select with 'pytest --run-skipped', which will skip subtest.)"
 ]
+
 minversion = "6.0"
 testpaths = ["tests"]
 # Customizing test discovery patterns
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*", "Check*"]
 python_functions = ["test_*", "check_*"]
-# -q supresses comments during testing
-# -ra provides detailed summary after testing
-# addopts = "-ra -q"  
-# addopts = "-ra -m 'not slow'"   # only runs not slow tests 
 
 [tool.setuptools.dynamic]
 version = { attr = "YearlyIntervalCycler.config.__version__" }
