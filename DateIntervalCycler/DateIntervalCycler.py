@@ -136,10 +136,13 @@ class DateIntervalCycler:
             Returns an iterator for the intervals.
 
         index_to_interval(index, only_start=False, only_end=False) -> tuple[dt, dt]:
-            Given an index, returns the corresponding interval.
+            Given an index, returns the corresponding interval.***
 
         index_from_date(date) -> int:
             Returns the index of the interval that contains the given date.
+
+        interval_from_date(date) -> int:
+            Given a date, return the corresponding interval that contains it.
 
         is_leap(year: int) -> bool:
             Checks if a given year is a leap year.
@@ -169,6 +172,22 @@ class DateIntervalCycler:
         (datetime.datetime(2020, 1, 1, 0, 0), datetime.datetime(2020, 1, 2, 0, 0))
         >>> cid.next_get()
         (datetime.datetime(2020, 1, 2, 0, 0), datetime.datetime(2020, 1, 3, 0, 0))
+
+    ***interval_from_date is much faster than index_to_interval.
+        If you need both the index and interval for a given date, then do not do
+
+        >>> from datetime import datetime
+        >>> cid = DateIntervalCycler.with_monthly(datetime(2020, 1, 1))
+        >>> #
+        >>> # this is slower:
+        >>> #
+        >>> index = DateIntervalCycler.index_from_date(date)       # slow method
+        >>> interval = DateIntervalCycler.index_to_interval(index) # slow method
+        >>> #
+        >>> # then doing this:
+        >>> #
+        >>> index = DateIntervalCycler.index_from_date(date)       # slow method
+        >>> interval = DateIntervalCycler.interval_from_date(date) # fast method
     """
 
     MONTH_DAYS_LEAP = _month_days_29
@@ -936,6 +955,71 @@ class DateIntervalCycler:
                 break
             ind += 1
         return ind + end_date_add
+
+    def interval_from_date(
+        self, date: Union[dt.datetime, dt.date], only_start: bool = False, only_end: bool = False
+    ) -> Union[dt.datetime, tuple[dt.datetime, dt.datetime], None, tuple[None, None]]:
+        """
+        Given a date, return the corresponding interval that contains it.
+
+        Args:
+            date (Union[dt.datetime, dt.date]): The date to find the interval with.
+            only_start (bool, optional): Flag to return only the start date.
+                                         Defaults to False.
+            only_end (bool, optional): Flag to return only the end date.
+                                       Defaults to False.
+
+        Returns:
+            Union[dt.datetime, tuple[dt.datetime, dt.datetime], None, tuple[None, None]]: The start
+                                 and end dates of the interval. Returns None if a bad date is given.
+        """
+        if only_start and only_end:
+            only_start = False
+            only_end = False
+
+        if date < self._first_start_date or date > self._last_end_date:
+            if only_start or only_end:
+                return None
+            return (None, None)
+
+        if date < self._p0_date:
+            if only_start:
+                return self._first_start_date
+            if only_end:
+                return self._p0_date
+            return (self._first_start_date, self._p0_date)
+
+        dim = len(self.cycles)
+        yN = date.year
+        pN = dim
+        for i, (vm, vd) in enumerate(self.cycles):
+            if self._end_of_feb_check and i == self._p_feb_29 and not _is_leap(yN):
+                # Feb 29 is invalid, either use Feb 28 or move to next cycle
+                vd = 28
+                if self._end_of_feb_check_has_28:
+                    continue  # 28 was previous cycle move to next cycle
+            if date < dt.datetime(yN, vm, vd):
+                pN = i
+                break
+
+        interval_end = self._to_datetime(pN, yN)
+
+        if interval_end > self._last_end_date:
+            interval_end = self._last_end_date
+
+        if only_end:
+            return interval_end
+
+        if 0 < pN < dim:
+            p0 = pN - 1
+            y0 = yN
+        else:
+            p0 = dim - 1
+            y0 = yN if pN == dim else yN - 1
+
+        if only_start:
+            return self._to_datetime(p0, y0)
+        return (self._to_datetime(p0, y0, False), interval_end)
 
     def tolist(
         self,

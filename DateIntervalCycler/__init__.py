@@ -50,13 +50,13 @@ Methods:
     from_year(cycles, year_start, starting_cycle_index=0, year_end=None, ending_cycle_index=0):
         Create a DateIntervalCycler from a starting year and cycles index.
 
-    with_monthly(first_interval_start, last_interval_end=None):
+    with_monthly(first_interval_start, last_interval_end=None, start_before_first_interval=False):
         Create a DateIntervalCycler with monthly interval's starting on the first of each month.
 
-    with_monthly_end(first_interval_start, last_interval_end=None):
+    with_monthly_end(first_interval_start, last_interval_end=None, start_before_first_interval=False):
         Create a DateIntervalCycler with monthly interval's ending on the last day of each month.
 
-    with_daily(first_interval_start, last_interval_end=None):
+    with_daily(first_interval_start, last_interval_end=None, start_before_first_interval=False):
         Create a DateIntervalCycler with daily intervals.
 
     copy(reset=False, shallow_copy_cycles=True):
@@ -90,10 +90,13 @@ Methods:
         Returns an iterator for the intervals.
 
     index_to_interval(index, only_start=False, only_end=False) -> tuple[dt, dt]:
-        Given an index, returns the corresponding interval.
+        Given an index, returns the corresponding interval.***
 
     index_from_date(date) -> int:
         Returns the index of the interval that contains the given date.
+
+    interval_from_date(date) -> int:
+        Given a date, return the corresponding interval that contains it.
 
     is_leap(year: int) -> bool:
         Checks if a given year is a leap year.
@@ -123,6 +126,23 @@ Examples:
     (datetime.datetime(2020, 1, 1, 0, 0), datetime.datetime(2020, 1, 2, 0, 0))
     >>> cid.next_get()
     (datetime.datetime(2020, 1, 2, 0, 0), datetime.datetime(2020, 1, 3, 0, 0))
+
+***interval_from_date is much faster than index_to_interval.
+    If you need both the index and interval for a given date, then do not do
+
+    >>> from datetime import datetime
+    >>> cid = DateIntervalCycler.with_monthly(datetime(2020, 1, 1))
+    >>> #
+    >>> # this is slower:
+    >>> #
+    >>> index = DateIntervalCycler.index_from_date(date)       # slow method
+    >>> interval = DateIntervalCycler.index_to_interval(index) # slow method
+    >>> #
+    >>> # then doing this:
+    >>> #
+    >>> index = DateIntervalCycler.index_from_date(date)       # slow method
+    >>> interval = DateIntervalCycler.interval_from_date(date) # fast method
+
 """
 
 from .DateIntervalCycler import DateIntervalCycler
