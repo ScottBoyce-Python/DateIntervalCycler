@@ -41,26 +41,30 @@ cid_daily       = DateIntervalCycler.with_daily(start_date, end_date)       # Cy
 
 
 # Iterate through the intervals
-print(f"Index,       Start,  End")
+print("Index,       Start,  End")
 for interval_start, interval_end in cid_monthly:
     if 4 < cid_monthly.index < cid_monthly.size - 4:
         continue
-    print(f"{cid_monthly.index:>5},  {interval_start.strftime("%Y-%m-%d")},  {interval_end.strftime("%Y-%m-%d")}")
+    print(f"{cid_monthly.index:>5},  {interval_start.strftime('%Y-%m-%d')},  {interval_end.strftime('%Y-%m-%d')}")
 
-print(f"\nIndex,       Start,  End")
+print("\nIndex,       Start,  End")
 for interval_start, interval_end in cid_monthly_end:
     if 4 < cid_monthly_end.index < cid_monthly_end.size - 4:
         continue
-    print(f"{cid_monthly_end.index:>5},  {interval_start.strftime("%Y-%m-%d")},  {interval_end.strftime("%Y-%m-%d")}")
+    print(f"{cid_monthly_end.index:>5},  {interval_start.strftime('%Y-%m-%d')},  {interval_end.strftime('%Y-%m-%d')}")
 
-print(f"\nIndex,       Start,  End")
+print("\nIndex,       Start,  End")
 for interval_start, interval_end in cid_daily:
      if 4 < cid_daily.index < cid_daily.size - 4:
         continue
-     print(f"{cid_daily.index:>5},  {interval_start.strftime("%Y-%m-%d")},  {interval_end.strftime("%Y-%m-%d")}")
-    
-# Terminal output:
-"""
+     print(f"{cid_daily.index:>5},  {interval_start.strftime('%Y-%m-%d')},  {interval_end.strftime('%Y-%m-%d')}")
+```
+
+&nbsp; 
+
+After running the previous code, the terminal output is:
+
+```
 Index,       Start,  End
     0,  2000-01-15,  2000-02-01
     1,  2000-02-01,  2000-03-01
@@ -93,10 +97,9 @@ Index,       Start,  End
   754,  2002-02-07,  2002-02-08
   755,  2002-02-08,  2002-02-09
   756,  2002-02-09,  2002-02-10
-"""
 ```
 
-
+&nbsp; 
 
  Here is a full example of the DateIntervalCycler class:
 
@@ -115,26 +118,28 @@ cycles = [
     (10, 1),
 ]
 
+cid = DateIntervalCycler(cycles, start_date, end_date)
+
 # Iterate through the intervals
-print(f"Index,       Start,  End")
+print("Index,       Start,  End")
 for interval_start, interval_end in cid:
-    print(f"{cid.index:>5},  {interval_start.strftime("%Y-%m-%d")},  {interval_end.strftime("%Y-%m-%d")}")
+    print(f"{cid.index:>5},  {interval_start.strftime('%Y-%m-%d')},  {interval_end.strftime('%Y-%m-%d')}")
 
 cid.reset()  # reset to start of series
 
-print(f"\nIndex,       Start,  End")
+print("\nIndex,       Start,  End")
 for i in range(4):
     interval_start, interval_end = cid.interval  # get current interval
     cid.next()                                   # move to next interval
-    print(f"{cid.index:>5},  {interval_start.strftime("%Y-%m-%d")},  {interval_end.strftime("%Y-%m-%d")}")
+    print(f"{cid.index:>5},  {interval_start.strftime('%Y-%m-%d')},  {interval_end.strftime('%Y-%m-%d')}")
 
 cid.reset(start_before_first_interval=True)  # first call to next() sets first interval as current 
                                              # rather than second interval
 
-print(f"\nIndex,       Start,  End")
+print("\nIndex,       Start,  End")
 for i in range(4):
     interval_start, interval_end = cid.next_get()  # equivalent to: cid.next(); cid.interval
-    print(f"{cid.index:>5},  {interval_start.strftime("%Y-%m-%d")},  {interval_end.strftime("%Y-%m-%d")}")
+    print(f"{cid.index:>5},  {interval_start.strftime('%Y-%m-%d')},  {interval_end.strftime('%Y-%m-%d')}")
     
 # Example of index and date lookup
 lookup_date = datetime(2003, 4, 15) 
@@ -147,9 +152,9 @@ interval_start1, interval_end1 = cid.interval_from_date(lookup_date)   # find in
 interval_start2, interval_end2 = cid.index_to_interval(cid.index_from_date(lookup_date))   # find interval for given index
 
 
-interval0 = f"{interval_start0.strftime("%Y-%m-%d")},  {interval_end0.strftime("%Y-%m-%d")}"
-interval1 = f"{interval_start1.strftime("%Y-%m-%d")},  {interval_end1.strftime("%Y-%m-%d")}"
-interval2 = f"{interval_start2.strftime("%Y-%m-%d")},  {interval_end2.strftime("%Y-%m-%d")}"
+interval0 = f"{interval_start0.strftime('%Y-%m-%d')},  {interval_end0.strftime('%Y-%m-%d')}"
+interval1 = f"{interval_start1.strftime('%Y-%m-%d')},  {interval_end1.strftime('%Y-%m-%d')}"
+interval2 = f"{interval_start2.strftime('%Y-%m-%d')},  {interval_end2.strftime('%Y-%m-%d')}"
 
 
 print("\nindex_to_ and  index_from_ results")
@@ -157,9 +162,13 @@ print(index)            # from cid.index_from_date(lookup_date)
 print(interval0)        # from cid.index_to_interval(lookup_index)
 print(interval1)        # from cid.interval_from_date(lookup_date); faster than index_to_interval(index_from_date(date))
 print(interval2)        # from index_to_interval(index_from_date(date))
+```
 
-# Terminal output:
-"""
+&nbsp; 
+
+After running the previous code, the terminal output is:
+
+```
 Index,       Start,  End
     0,  2000-01-01,  2000-04-01
     1,  2000-04-01,  2000-07-01
@@ -201,10 +210,12 @@ index_to_ and  index_from_ results
 2005-01-01,  2005-04-01
 2003-04-01,  2003-07-01
 2003-04-01,  2003-07-01
-"""
 ```
 
+
+
 ## Testing
+
 This project uses `pytest` and `pytest-xdist` for testing. Tests are located in the `tests` folder. Tests that are very slow are marked as being "slow". The `tests` directory contains multiple subdirectories that contain equivalent slow tests are divided into multiple files to improve parallel execution. The original, slow tests are marked as "slow_skip" and skipped, while the subdirectory tests are marked as "subset".
 
 To run tests, install the required packages and execute the following command:
