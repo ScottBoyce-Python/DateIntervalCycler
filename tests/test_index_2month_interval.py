@@ -81,5 +81,8 @@ def test_index_2month_interval(start_list, end_list):
                 assert cid.index_to_interval(cid.index, True) == s
                 assert cid.index_to_interval(cid.index, False, True) == e
 
+                assert cid.interval_from_date(s) == (s, e)
+                assert cid.interval_from_date(half(s, e)) == (s, e)
+
                 e_old = e
                 ind += 1

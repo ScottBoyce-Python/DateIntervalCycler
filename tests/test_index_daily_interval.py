@@ -57,19 +57,26 @@ end_list = (
     reason="Test is split into multiple files, test_index_daily_interval_X.py, for better parallel execution"
 )
 @pytest.mark.slow
+@pytest.mark.slow_skip
 @pytest.mark.parametrize("start_list, end_list", [(start_list, end_list) for start_list in start_lists])
 def test_index_daily_interval(start_list, end_list):
     for start in start_list:
-        for end in end_list:
-            cid = DateIntervalCycler.with_daily(start, end)
-            ind = 0
-            e_old = start
-            for s, e in cid:
-                assert s == e_old
-                assert cid.index == ind
-                assert cid.index == cid.index_from_date(s)
-                assert cid.index_to_interval(ind) == (s, e)
+        index_daily_interval_end_list_loop(start, end_list)
 
-                e_old = e
-                ind += 1
-            assert cid.index + 1 == cid.index_from_date(e)  # e = end date
+
+def index_daily_interval_end_list_loop(start, end_list):
+    for end in end_list:
+        cid = DateIntervalCycler.with_daily(start, end)
+        ind = 0
+        e_old = start
+        for s, e in cid:
+            assert s == e_old
+            assert cid.index == ind
+            assert cid.index == cid.index_from_date(s)
+            assert cid.index_to_interval(ind) == (s, e)
+
+            assert cid.interval_from_date(s) == (s, e)
+
+            e_old = e
+            ind += 1
+        assert cid.index + 1 == cid.index_from_date(e)  # e = end date

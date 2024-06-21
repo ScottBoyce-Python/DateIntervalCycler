@@ -5,7 +5,6 @@ Full test_index_semi_daily_interval test. However it takes 7 minutes and pytest-
 distribute the workload well, so it was split into multiple files to improve speed.
 """
 
-
 from DateIntervalCycler import DateIntervalCycler
 import datetime as dt
 import pytest
@@ -53,19 +52,25 @@ end_list = (
 @pytest.mark.skip(
     reason="Test is split into multiple files, test_index_semi_daily_interval_X.py, for better parallel execution"
 )
+@pytest.mark.slow
+@pytest.mark.slow_skip
 @pytest.mark.parametrize("start_list, end_list, cycles", [(start_list, end_list, cycles) for start_list in start_lists])
 def test_index_semi_daily_interval(start_list, end_list, cycles):
     for start in start_list:
-        for end in end_list:
-            cid = DateIntervalCycler(cycles, start, end)
-            ind = 0
-            e_old = start
-            for s, e in cid:
-                assert s == e_old
-                assert cid.index == ind
-                assert cid.index == cid.index_from_date(s)
-                assert cid.index_to_interval(ind) == (s, e)
+        index_semi_daily_interval_end_list_loop(start, end_list)
 
-                e_old = e
-                ind += 1
-            assert cid.index + 1 == cid.index_from_date(e)  # e = end date
+
+def index_semi_daily_interval_end_list_loop(start, end_list):
+    for end in end_list:
+        cid = DateIntervalCycler(cycles, start, end)
+        ind = 0
+        e_old = start
+        for s, e in cid:
+            assert s == e_old
+            assert cid.index == ind
+            assert cid.index == cid.index_from_date(s)
+            assert cid.index_to_interval(ind) == (s, e)
+
+            e_old = e
+            ind += 1
+        assert cid.index + 1 == cid.index_from_date(e)  # e = end date
