@@ -822,7 +822,7 @@ class DateIntervalCycler:
 
     def index_to_interval(
         self, index, only_start: bool = False, only_end: bool = False
-    ) -> Union[dt.datetime, tuple[dt.datetime, dt.datetime]]:
+    ) -> Union[dt.datetime, tuple[dt.datetime, dt.datetime], None, tuple[None, None]]:
         """
         Given an index, return the corresponding date interval.
 
@@ -834,7 +834,8 @@ class DateIntervalCycler:
                                        Defaults to False.
 
         Returns:
-            Union[dt.datetime, tuple[dt.datetime, dt.datetime]]: The start and end dates of the interval.
+            Union[dt.datetime, tuple[dt.datetime, dt.datetime], None, tuple[None, None]]: The start
+                                 and end dates of the interval. Returns None if a bad date is given.
         """
         if only_start and only_end:
             only_start = False
@@ -1002,7 +1003,7 @@ class DateIntervalCycler:
         Dangerous, allows editing cycles array"""
         self.cycles.setflags(write=True)
 
-    def _to_datetime(self, p, y: Optional[int] = None) -> dt.datetime:
+    def _to_datetime(self, p, y: Optional[int] = None, feb29_move_next_fix=True) -> dt.datetime:
         """
         Internal method that converts a cycle index to a datetime object using current interval's
         year or specified year.
@@ -1010,6 +1011,9 @@ class DateIntervalCycler:
         Args:
             p (int): The cycle index.
             y (Optional[int], optional): The year. Defaults to None.
+            feb29_move_next_fix(bool, optional): Specify cycle shift direction if non-leap year and
+                                                 cycles[p] is (2,29). If True, then move to next cycle,
+                                                 otherwise move to previous cycle. Defaults to True.
 
         Returns:
             dt.datetime: The corresponding datetime object.
@@ -1021,22 +1025,29 @@ class DateIntervalCycler:
             )
         if y is None:
             y = self._y
-        if not self._end_of_feb_check:
+        if p != self._p_feb_29 or _is_leap(y):  # No need to worry about invalid Feb29
             if p < self._dim:
                 return dt.datetime(y, *self.cycles[p])
             return dt.datetime(y + 1, *self.cycles[0])
 
-        if p < self._dim:
-            m, d = self.cycles[p]
-        else:
-            m, d = self.cycles[0]
-            y += 1
-        if m != 2 or _is_leap(y) or (m == 2 and d < 29):
-            return dt.datetime(y, m, d)
+        if not self._end_of_feb_check_has_28:
+            return dt.datetime(y, 2, 28)  # 29 defined, but not 28 and not leap year, so use 28
 
-        if self._end_of_feb_check_has_28:
-            return self._to_datetime(p + 1)  # has 28 so move forward cause 29 does not exist
-        return dt.datetime(y, m, 28)
+        if feb29_move_next_fix:
+            return self._to_datetime(p + 1)  # has 28 so move next cause 29 does not exist
+        return self._to_datetime(p - 1)  # has 28 so move back cause 29 does not exist
+
+        # if p < self._dim:
+        #     m, d = self.cycles[p]
+        # else:
+        #     m, d = self.cycles[0]
+        #     y += 1
+        # if m != 2 or _is_leap(y) or (m == 2 and d < 29):
+        #     return dt.datetime(y, m, d)
+
+        # if self._end_of_feb_check_has_28:
+        #     return self._to_datetime(p + 1)  # has 28 so move forward cause 29 does not exist
+        # return dt.datetime(y, m, 28)
 
     def _start_less_end_check(self):
         if self._last_end_date is not None and self._last_end_date < self._first_start_date:
