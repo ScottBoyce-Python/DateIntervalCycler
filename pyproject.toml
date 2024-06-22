@@ -23,9 +23,8 @@ classifiers = [
 dynamic = [ "version"]
 
 [project.optional-dependencies]
-# pip install .[testing]
-# pip install .[parallel-testing]
-testing = ["pytest", "pytest-xdist"]
+# pip install .[test-tools]
+test-tools = ["pytest", "pytest-xdist"]
 
 [project.urls]
 "Homepage" = "https://github.com/yourusername/my_project"
