@@ -3,12 +3,11 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "YearlyIntervalCycler"
+name = "DateIntervalCycler"
 description = "Python class that manages a memory and speed efficient datetime series of intervals that cycle through a user specified set of month and day."
 authors = [{ name = "Scott E. Boyce", email = "Boyce@engineer.com" }]
 maintainers = [{ name = "Scott E. Boyce", email = "Boyce@engineer.com" }]
 license = { text = "MIT" }
-readme = "README.md"
 requires-python = ">=3.8,<4"
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -29,6 +28,10 @@ test-tools = ["pytest", "pytest-xdist"]
 [project.urls]
 "Homepage" = "https://github.com/yourusername/my_project"
 "Source Code" = "https://github.com/yourusername/my_project"
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
 
 [tool.pytest.ini_options]
 # agressive parallel options
@@ -58,8 +61,7 @@ python_classes = ["Test*", "Check*"]
 python_functions = ["test_*", "check_*"]
 
 [tool.setuptools.dynamic]
-version = { attr = "YearlyIntervalCycler.config.__version__" }
-readme = { file = ["README.md"], content-type = "text/markdown" }
+version = { attr = "DateIntervalCycler.config.__version__" }
 
 [tool.black]
 target-version = ['py39']

@@ -1,13 +1,17 @@
-__author__ = "Scott E. Boyce"
-__email__ = "boyce@engineer.com"
-__license__ = "MIT"
-__copyright__ = "Copyright (c) 2024 Scott E. Boyce"
-__maintainer__ = "Scott E. Boyce"
-__status__ = "Development"
-__url__ = "https://github.com/ScottBoyce-Python/DateIntervalCycler"
-
 from typing import Sequence, Union, Optional, Iterator
 import datetime as dt
+from ._metadata import (
+    __version__,
+    __author__,
+    __email__,
+    __license__,
+    __status__,
+    __maintainer__,
+    __credits__,
+    __url__,
+    __description__,
+    __copyright__,
+)
 
 FEB28 = (2, 28)
 FEB29 = (2, 29)
@@ -43,7 +47,8 @@ def _intervals_to_array(cycles: Sequence[tuple[int, int]]) -> tuple[tuple[int, i
 
 class DateIntervalCycler:
     """
-    A class that cycles through datetime intervals based on provided (month, day) tuples.
+    A class that efficiently cycles through datetime intervals generated from a
+    start date and list of (month, day) tuples.
 
     This class is used to generate a datetime series of intervals that follow the user
     specified interval cycles. If cycles contains (2, 29), then it will honor leap years
@@ -51,21 +56,28 @@ class DateIntervalCycler:
     contains both (2, 28) and (2, 29), then it will skip using (2, 29) for non-leap years.
 
     Supports basic indexing, cid[4], cid[date], cid[4:10], which are syntactic sugar
-    for the index_to_interval, interval_from_date, and tolist, respectively.
+    for the index_to_interval, interval_from_date, and tolist methods, respectively.
 
-    This docstring uses dt as shorthand for a datetime.datetime object; dt.date for a
-    datetime.date object; and cycler for a DateIntervalCycler object.
+    This docstring uses `dt` as shorthand for a `datetime.datetime` object; `dt.date` for a
+    `datetime.date` object.
+
+    cid = DateIntervalCycler(cycles, first_interval_start, last_interval_end, start_before_first_interval)
 
     Args:
-        cycles (Sequence[tuple[int, int]]): Sequence of (month, day) tuples defining the interval cycles.
-        first_interval_start (Union[dt, dt.date]): The start date of the first interval.
-        last_interval_end (Union[None, dt, dt.date]): The end date of the last interval. Defaults to None.
-        start_before_first_interval (bool): Flag to start before the first interval. Defaults to False.
-                                            If False, then first call to next() moves to the second interval.
-                                            If True, then it requires two calls to next() to get the second interval.
+        cycles (Sequence[tuple[int, int]]):                     Sequence of (month, day) tuples that
+                                                                are cycled through to construct the
+                                                                datetime intervals.
+        first_interval_start (Union[dt, dt.date]):              The start date of the first interval.
+        last_interval_end (Union[None, dt, dt.date], optional): The end date of the last interval.
+                                                                Defaults to None.
+        start_before_first_interval (bool, optional):           Flag to start before the first interval.
+                                                                Defaults to False.
+                                                                If False, then first call to next() moves to the second interval.
+                                                                If True, then it requires two calls to next() to get the second interval.
 
     Attributes:
-        cycles (tuple[tuple[int, int]]): Tuple array whose rows are the (month, day) that each interval cycles through.
+        cycles (tuple[tuple[int, int]]): Tuple of (month, day) tuples that are cycled
+                                         through to construct the datetime intervals.
 
         size (int): The number of intervals from first_interval_start to last_interval_end.
                     If last_interval_end is None, returns MAX_INTERVAL.
@@ -87,8 +99,6 @@ class DateIntervalCycler:
         MONTH_DAYS_LEAP (tuple): Days in each month of a leap year (non-zero month number is index).
         MONTH_DAYS_NOLEAP (tuple): Days in each month of a non-leap year (non-zero month number is index).
         MAX_INTERVAL (int): Maximum number of allowed intervals.
-
-
 
     Methods:
 
@@ -1532,6 +1542,17 @@ class DateIntervalCycler:
 
 
 if __name__ == "__main__":
+    print(f"Version: {__version__}")
+    print(f"Author: {__author__}")
+    print(f"Email: {__email__}")
+    print(f"License: {__license__}")
+    print(f"Status: {__status__}")
+    print(f"Maintainer: {__maintainer__}")
+    print(f"Credits: {__credits__}")
+    print(f"URL: {__url__}")
+    print(f"Description: {__description__}")
+    print(f"Copyright: {__copyright__}")
+
     print("Starting Main Tests")
 
     def daily_dates(start_date, end_date=None, reverse=False):
