@@ -430,6 +430,21 @@ def test_tolist1():
 
     assert cid.tolist() == ans_for_1_and_2
 
+    assert cid.tolist(only_start=True) == [d0 for d0, _ in ans_for_1_and_2]
+    assert cid.tolist(only_end=True) == [d1 for _, d1 in ans_for_1_and_2]
+
+    assert cid.tolist(step=0) == []
+
+    for step in range(2, cid.size):
+        assert cid.tolist(step=step) == ans_for_1_and_2[::step]
+        assert cid.tolist(step=step, only_start=True) == [d0 for d0, _ in ans_for_1_and_2][::step]
+        assert cid.tolist(step=step, only_end=True) == [d1 for _, d1 in ans_for_1_and_2][::step]
+
+    for step in range(-1, -1 * cid.size, -1):
+        assert cid.tolist(step=step) == ans_for_1_and_2[::step]
+        assert cid.tolist(step=step, only_start=True) == [d0 for d0, _ in ans_for_1_and_2][::step]
+        assert cid.tolist(step=step, only_end=True) == [d1 for _, d1 in ans_for_1_and_2][::step]
+
 
 def test_tolist2():
     cycles = [
@@ -441,11 +456,11 @@ def test_tolist2():
 
     cid = DateIntervalCycler(cycles, dt.datetime(2000, 2, 1))
 
-    assert cid.tolist(3, 10) == ans_for_1_and_2[3:11]  # note tolist is is inclusive for end index
+    assert cid.tolist(3, 10) == ans_for_1_and_2[3:10]  # note tolist is is inclusive for end index
 
     cid = DateIntervalCycler(cycles, dt.datetime(2000, 2, 1), start_before_first_interval=True)
 
-    assert cid.tolist(3, 10) == ans_for_1_and_2[3:11]  # note tolist is is inclusive for end index
+    assert cid.tolist(3, 10) == ans_for_1_and_2[3:10]  # note tolist is exclusive for end index
 
 
 def test_tolist3():
@@ -460,3 +475,89 @@ def test_tolist3():
     )
 
     assert cid.tolist() == ans_for_3
+
+    assert cid.tolist(only_start=True) == [d0 for d0, _ in ans_for_3]
+    assert cid.tolist(only_end=True) == [d1 for _, d1 in ans_for_3]
+
+    assert cid.tolist(step=0) == []
+
+    for step in range(2, cid.size):
+        assert cid.tolist(step=step) == ans_for_3[::step]
+        assert cid.tolist(step=step, only_start=True) == [d0 for d0, _ in ans_for_3][::step]
+        assert cid.tolist(step=step, only_end=True) == [d1 for _, d1 in ans_for_3][::step]
+
+    for step in range(-1, -1 * cid.size, -1):
+        assert cid.tolist(step=step) == ans_for_3[::step]
+        assert cid.tolist(step=step, only_start=True) == [d0 for d0, _ in ans_for_3][::step]
+        assert cid.tolist(step=step, only_end=True) == [d1 for _, d1 in ans_for_3][::step]
+
+
+@pytest.mark.parametrize(
+    "end_date",
+    [
+        end_date
+        for end_date in [
+            dt.datetime(1953, 2, 5),
+            dt.datetime(1953, 2, 28),
+            dt.datetime(1953, 3, 12),
+            dt.datetime(1956, 2, 5),
+            dt.datetime(1956, 2, 29),
+            dt.datetime(1956, 3, 12),
+            dt.datetime(1967, 3, 12),
+            dt.datetime(1968, 3, 12),
+        ]
+    ],
+)
+def test_tolist3_index(end_date: dt.datetime):
+    cid = DateIntervalCycler.with_monthly_end(dt.datetime(1950, 1, 15), end_date)
+    ans = ans_for_3[: cid.size]
+    ans[-1] = (ans[-1][0], end_date)
+    dim = len(ans)
+    for i in range(dim):
+        it = 0 if i < 3 else i - 2
+        for j in range(it, dim):
+            assert cid.tolist(i, j) == ans[i:j]
+            assert cid[i:j] == ans[i:j]
+
+
+def test_tolist_single_cycle():
+    cycles = [
+        (6, 1),  # Duplicate should be dropped
+    ]
+
+    cid = DateIntervalCycler(cycles, dt.datetime(2000, 3, 1), dt.datetime(2019, 7, 1))
+    ans = [
+        (dt.datetime.strptime(start_date, "%Y-%m-%d"), dt.datetime.strptime(end_date, "%Y-%m-%d"))
+        for start_date, end_date in [
+            ("2000-3-1", "2000-6-1"),  # Note, it honors the starting date
+            ("2000-6-1", "2001-6-1"),  # Follows the month and day defined by "cycles"
+            ("2001-6-1", "2002-6-1"),
+            ("2002-6-1", "2003-6-1"),
+            ("2003-6-1", "2004-6-1"),
+            ("2004-6-1", "2005-6-1"),
+            ("2005-6-1", "2006-6-1"),
+            ("2006-6-1", "2007-6-1"),
+            ("2007-6-1", "2008-6-1"),
+            ("2008-6-1", "2009-6-1"),
+            ("2009-6-1", "2010-6-1"),
+            ("2010-6-1", "2011-6-1"),
+            ("2011-6-1", "2012-6-1"),
+            ("2012-6-1", "2013-6-1"),
+            ("2013-6-1", "2014-6-1"),
+            ("2014-6-1", "2015-6-1"),
+            ("2015-6-1", "2016-6-1"),
+            ("2016-6-1", "2017-6-1"),
+            ("2017-6-1", "2018-6-1"),
+            ("2018-6-1", "2019-6-1"),
+            ("2019-6-1", "2019-7-1"),  # Note, it honors the ending date
+        ]
+    ]
+    lst = cid.tolist()
+    assert lst == ans
+
+    dim = len(ans)
+    for i in range(dim):
+        it = 0 if i < 3 else i - 2
+        for j in range(it, dim):
+            assert cid.tolist(i, j) == ans[i:j]
+            assert cid[i:j] == ans[i:j]

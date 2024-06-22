@@ -8,6 +8,9 @@ specified interval cycles. If cycles contains (2, 29), then it will honor leap y
 by setting the interval date time (2, 28) for non-leap years. However, if the cycles
 contains both (2, 28) and (2, 29), then it will skip using (2, 29) for non-leap years.
 
+Supports basic indexing, cid[4], cid[date], cid[4:10], which are syntactic sugar
+for the index_to_interval, interval_from_date, and tolist, respectively.
+
 This docstring uses dt as shorthand for a datetime.datetime object; dt.date for a
 datetime.date object; and cycler for a DateIntervalCycler object.
 
@@ -43,8 +46,6 @@ Attributes:
     MONTH_DAYS_NOLEAP (tuple): Days in each month of a non-leap year (non-zero month number is index).
     MAX_INTERVAL (int): Maximum number of allowed intervals.
 
-
-
 Methods:
 
     from_year(cycles, year_start, starting_cycle_index=0, year_end=None, ending_cycle_index=0):
@@ -65,7 +66,8 @@ Methods:
     reset(start_before_first_interval=False):
         Resets the current interval to the first interval.
 
-    tolist(start_override=None, end_override=None, from_current_position=False, as_str=False):
+    tolist(start_override=None, end_override=None, from_current_position=False,
+           only_start=False, only_end=False, step=1) -> list[Union[dt.datetime, tuple[dt.datetime, dt.datetime]]]:
         Converts the intervals to a list.
 
     set_first_interval_start(first_interval_start, start_before_first_interval=False):
@@ -86,7 +88,7 @@ Methods:
     back_get(allowStopIteration=False) -> tuple[dt, dt]:
         Moves back to the previous interval and returns its start and end dates.
 
-    iter(reset_to_start=False) -> Iterator[tuple[dt, dt]]:
+    iter(only_start=False, only_end=False, reset_to_start=False) -> Iterator[Union[dt,tuple[dt, dt]]]:
         Returns an iterator for the intervals.
 
     index_to_interval(index, only_start=False, only_end=False) -> tuple[dt, dt]:

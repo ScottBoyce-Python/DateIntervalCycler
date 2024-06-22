@@ -50,6 +50,9 @@ class DateIntervalCycler:
     by setting the interval date time (2, 28) for non-leap years. However, if the cycles
     contains both (2, 28) and (2, 29), then it will skip using (2, 29) for non-leap years.
 
+    Supports basic indexing, cid[4], cid[date], cid[4:10], which are syntactic sugar
+    for the index_to_interval, interval_from_date, and tolist, respectively.
+
     This docstring uses dt as shorthand for a datetime.datetime object; dt.date for a
     datetime.date object; and cycler for a DateIntervalCycler object.
 
@@ -107,7 +110,8 @@ class DateIntervalCycler:
         reset(start_before_first_interval=False):
             Resets the current interval to the first interval.
 
-        tolist(start_override=None, end_override=None, from_current_position=False, as_str=False):
+        tolist(start_override=None, end_override=None, from_current_position=False,
+               only_start=False, only_end=False, step=1) -> list[Union[dt.datetime, tuple[dt.datetime, dt.datetime]]]:
             Converts the intervals to a list.
 
         set_first_interval_start(first_interval_start, start_before_first_interval=False):
@@ -128,7 +132,7 @@ class DateIntervalCycler:
         back_get(allowStopIteration=False) -> tuple[dt, dt]:
             Moves back to the previous interval and returns its start and end dates.
 
-        iter(reset_to_start=False) -> Iterator[tuple[dt, dt]]:
+        iter(only_start=False, only_end=False, reset_to_start=False) -> Iterator[Union[dt,tuple[dt, dt]]]:
             Returns an iterator for the intervals.
 
         index_to_interval(index, only_start=False, only_end=False) -> tuple[dt, dt]:
@@ -798,7 +802,9 @@ class DateIntervalCycler:
                 self._p_back()  # p -= 1 because Feb 29 is invalid for this year and 28 is defined
         return 0
 
-    def iter(self, reset_to_start=False) -> Iterator[tuple[dt.datetime, dt.datetime]]:
+    def iter(
+        self, only_start: bool = False, only_end: bool = False, reset_to_start=False
+    ) -> Iterator[Union[dt.datetime, tuple[dt.datetime, dt.datetime]]]:
         """
         Returns an iterator for the intervals. The first next call returns the
         current interval start and end dates. Each subsequent next call returns the
@@ -808,25 +814,53 @@ class DateIntervalCycler:
         Args:
             reset_to_start (bool, optional): Flag to have the iterator start at the first interval,
                                              otherwise returns current interval. Defaults to False.
+            only_start (bool, optional): Flag to iterate only the start date.
+                                         Defaults to False.
+            only_end (bool, optional): Flag to iterate only the end date.
+                                       Defaults to False.
 
         Returns:
             Iterator[tuple[dt.datetime, dt.datetime]]: The iterator object.
         """
         if self._at_first_interval != 0 and self._at_last_interval != 0:
-            yield self.interval
+            if only_start:
+                yield self.interval_start
+            elif only_end:
+                yield self.interval_end
+            else:
+                yield self.interval
             return
 
         if reset_to_start:
             self.reset()
 
-        if self._started_before_first_interval:
-            while not self.next():
-                yield self.interval
+        if only_start:
+            if self._started_before_first_interval:
+                while not self.next():
+                    yield self.interval_start
+            else:
+                while True:
+                    yield self.interval_start
+                    if self.next():  # reached end of range
+                        return
+        elif only_end:
+            if self._started_before_first_interval:
+                while not self.next():
+                    yield self.interval_end
+            else:
+                while True:
+                    yield self.interval_end
+                    if self.next():  # reached end of range
+                        return
         else:
-            while True:
-                yield self.interval
-                if self.next():  # reached end of range
-                    return
+            if self._started_before_first_interval:
+                while not self.next():
+                    yield self.interval
+            else:
+                while True:
+                    yield self.interval
+                    if self.next():  # reached end of range
+                        return
 
     def index_to_interval(
         self, index, only_start: bool = False, only_end: bool = False
@@ -1015,25 +1049,40 @@ class DateIntervalCycler:
         start_override: Union[None, dt.datetime, dt.date, int] = None,
         end_override: Union[None, dt.datetime, dt.date, int] = None,
         from_current_position: bool = False,
-        as_str: bool = False,
-    ) -> list[tuple[dt.datetime, dt.datetime]]:
+        only_start: bool = False,
+        only_end: bool = False,
+        step: int = 1,
+    ) -> list[Union[dt.datetime, tuple[dt.datetime, dt.datetime]]]:
         """
         Convert the intervals to a list of datetime tuples.
+
         The list can use the current interval as the start or use all the intervals.
         The list can optionally specify a different starting and/or ending date.
         If last_interval_end is None, then end_override must be specified,
         so there is an end to the list.
 
+        Note, both the end date and end_override dates are inclusive.
+
         Args:
-            start_override (Union[None, dt.datetime, dt.date, int], optional): Override for the start date of the list. Defaults to None.
-            end_override (Union[None, dt.datetime, dt.date, int], optional): Override for the end date of the list. Defaults to None.
+            start_override (Union[None, dt.datetime, dt.date, int], optional): Override for the start date of the list.
+                                                                               If int, then the interval at index is the
+                                                                               start of the list. Defaults to None.
+            end_override (Union[None, dt.datetime, dt.date, int], optional): Override for the end date of the list.
+                                                                             If int, then the (index-1) interval is the
+                                                                             end of the list. Defaults to None.
             from_current_position (bool, optional): Flag to start list from current interval. Defaults to False.
-            as_str (bool, optional): Flag to indicate that datetime objects should be converted to YYYY-MM-DD strings
+            only_start (bool, optional): Flag to return only the start date.
+                                         Defaults to False.
+            only_end (bool, optional): Flag to return only the end date.
+                                       Defaults to False.
+            step (int, optional): specifies the increment (or decrement) of included intervals.
 
 
         Returns:
             list[tuple[dt.datetime, dt.datetime]]: The DateIntervalCycler object as a list.
         """
+        if step == 0:
+            return []
 
         if not self._has_last_end_date and end_override is None:
             raise ValueError(
@@ -1041,6 +1090,11 @@ class DateIntervalCycler:
                 "either when initializing the DateIntervalCycler object with `end=` or\n"
                 "or by passing `end_override` into this function."
             )
+
+        if only_start and only_end:
+            only_start = False
+            only_end = False
+
         cid = self.copy()  # No reset, but do a shallow copy
 
         if start_override is not None:
@@ -1054,7 +1108,7 @@ class DateIntervalCycler:
 
         if end_override is not None:
             if isinstance(end_override, int):
-                end_override = self[end_override][1]
+                end_override = self[end_override][0]
             elif type(end_override) is not dt.datetime:
                 try:
                     end_override = dt.datetime(end_override.year, end_override.month, end_override.day)
@@ -1066,12 +1120,56 @@ class DateIntervalCycler:
             cid._last_end_date = end_override
             cid._has_last_end_date = True
             cid._len = -999  # no need to recalculate for dummy variable
-            cid._start_less_end_check()
+            if end_override <= cid._p0_date:
+                cid._at_last_interval = 1
+            if end_override <= cid._first_start_date:
+                return []
 
-        if as_str:
-            return [(d1.strftime("%Y-%m-%d"), d2.strftime("%Y-%m-%d")) for d1, d2 in cid]
+        return cid._tolist_intervals(only_start, only_end, step)
 
-        return [it for it in cid]
+    def _tolist_intervals(self, only_start: bool, only_end: bool, step: int):
+        # Only call from tolist method via its cid object
+        if step == 1:
+            if only_start:
+                return [it for it in self.iter(only_start=True)]
+            if only_end:
+                return [it for it in self.iter(only_end=True)]
+            return [it for it in self]
+
+        if step < 0:
+            if only_start:
+                return [it for it in self.iter(only_start=True)][::step]
+            if only_end:
+                return [it for it in self.iter(only_end=True)][::step]
+            return [it for it in self][::step]
+
+        if only_start:
+            lst = [self.interval_start]
+        elif only_end:
+            lst = [self.interval_end]
+        else:
+            lst = [self.interval]
+
+        it = 0
+        if only_start:
+            while not self.next():
+                it += 1
+                if it == step:
+                    it = 0
+                    lst.append(self.interval_start)
+        elif only_end:
+            while not self.next():
+                it += 1
+                if it == step:
+                    it = 0
+                    lst.append(self.interval_end)
+        else:
+            while not self.next():
+                it += 1
+                if it == step:
+                    it = 0
+                    lst.append(self.interval)
+        return lst
 
     def _to_datetime(self, p, y: Optional[int] = None, feb29_move_next_fix=True) -> dt.datetime:
         """
@@ -1456,43 +1554,6 @@ if __name__ == "__main__":
 
     cycles = [
         (6, 1),  # Duplicate should be dropped
-    ]
-
-    cid = DateIntervalCycler(cycles, dt.datetime(2000, 3, 1))
-    assert cid.next_get()[0] == dt.datetime(2000, 6, 1)
-    assert cid.next_get()[0] == dt.datetime(2001, 6, 1)
-    assert cid.next_get()[0] == dt.datetime(2002, 6, 1)
-    cid = DateIntervalCycler(cycles, dt.datetime(2000, 7, 1))
-    assert cid.next_get()[0] == dt.datetime(2001, 6, 1)
-    assert cid.next_get()[0] == dt.datetime(2002, 6, 1)
-    assert cid.next_get()[0] == dt.datetime(2003, 6, 1)
-    cid = DateIntervalCycler(cycles, dt.datetime(2000, 3, 1), dt.datetime(2019, 7, 1))
-    lst = cid.tolist()
-    assert lst == [
-        (dt.datetime.strptime(start_date, "%Y-%m-%d"), dt.datetime.strptime(end_date, "%Y-%m-%d"))
-        for start_date, end_date in [
-            ("2000-3-1", "2000-6-1"),  # Note, it honors the starting date
-            ("2000-6-1", "2001-6-1"),  # Follows the month and day defined by "cycles"
-            ("2001-6-1", "2002-6-1"),
-            ("2002-6-1", "2003-6-1"),
-            ("2003-6-1", "2004-6-1"),
-            ("2004-6-1", "2005-6-1"),
-            ("2005-6-1", "2006-6-1"),
-            ("2006-6-1", "2007-6-1"),
-            ("2007-6-1", "2008-6-1"),
-            ("2008-6-1", "2009-6-1"),
-            ("2009-6-1", "2010-6-1"),
-            ("2010-6-1", "2011-6-1"),
-            ("2011-6-1", "2012-6-1"),
-            ("2012-6-1", "2013-6-1"),
-            ("2013-6-1", "2014-6-1"),
-            ("2014-6-1", "2015-6-1"),
-            ("2015-6-1", "2016-6-1"),
-            ("2016-6-1", "2017-6-1"),
-            ("2017-6-1", "2018-6-1"),
-            ("2018-6-1", "2019-6-1"),
-            ("2019-6-1", "2019-7-1"),  # Note, it honors the ending date
-        ]
     ]
 
     cid = DateIntervalCycler(cycles, dt.datetime(2000, 7, 1), dt.datetime(2019, 2, 1))
