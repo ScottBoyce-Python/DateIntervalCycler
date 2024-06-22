@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "DateIntervalCycler"
-description = "Python class that manages a memory and speed efficient datetime series of intervals that cycle through a user specified set of month and day."
+description = "Class that cycles through datetime intervals generated from a start date and list of (month, day) tuples. "
 authors = [{ name = "Scott E. Boyce", email = "Boyce@engineer.com" }]
 maintainers = [{ name = "Scott E. Boyce", email = "Boyce@engineer.com" }]
 license = { text = "MIT" }
