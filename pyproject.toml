@@ -10,20 +10,25 @@ maintainers = [{ name = "Scott E. Boyce", email = "Boyce@engineer.com" }]
 license = { text = "MIT" }
 requires-python = ">=3.8,<4"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
 ]
-dynamic = [ "version"]
+dynamic = ["version"]
 
 [project.optional-dependencies]
 # pip install .[test-tools]
-test-tools = ["pytest", "pytest-xdist"]
+lint = ["ruff"]
+test-tools = [
+  "DateIntervalCycler[lint]", 
+  "pytest", 
+  "pytest-xdist",
+  ]
 
 [project.urls]
 "Homepage" = "https://github.com/ScottBoyce-Python/DateIntervalCycler"
@@ -35,7 +40,7 @@ content-type = "text/markdown"
 
 [tool.pytest.ini_options]
 # agressive parallel options
-addopts = "-ra --dist worksteal -nauto"  # Defaults to parallel tests, comment out if you want serial.
+addopts = "-ra --dist worksteal -nauto" # Defaults to parallel tests, comment out if you want serial.
 # addopts="-ra --dist worksteal -nauto --run-slow-skip"  # run skip tests and skip subset tests
 # addopts="-ra --dist worksteal -nauto -m 'not slow'"  # on run fast tests
 # addopts = "-ra --dist worksteal -nauto -q"  # supress output during testing
@@ -48,9 +53,9 @@ addopts = "-ra --dist worksteal -nauto"  # Defaults to parallel tests, comment o
 
 
 markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-    "subset: marks tests as beings a subset of a slow_skip test that is created for fast parallel executaion, skipped if running slow_skip.",
-    "slow_skip: marks tests as slow_skip, which are also marked with skip\n(select with 'pytest --run-skipped', which will skip subtest.)"
+  "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+  "subset: marks tests as beings a subset of a slow_skip test that is created for fast parallel executaion, skipped if running slow_skip.",
+  "slow_skip: marks tests as slow_skip, which are also marked with skip\n(select with 'pytest --run-skipped', which will skip subtest.)",
 ]
 
 minversion = "6.0"
@@ -60,8 +65,12 @@ python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*", "Check*"]
 python_functions = ["test_*", "check_*"]
 
+[tool.setuptools]
+packages = ["DateIntervalCycler"]
+include-package-data = true
+
 [tool.setuptools.dynamic]
-version = { attr = "DateIntervalCycler.config.__version__" }
+version = { attr = "DateIntervalCycler._metadata.__version__" }
 
 [tool.black]
 target-version = ['py39']
