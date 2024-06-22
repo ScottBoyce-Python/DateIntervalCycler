@@ -8,10 +8,9 @@ __url__ = "https://github.com/ScottBoyce-Python/DateIntervalCycler"
 
 from typing import Sequence, Union, Optional, Iterator
 import datetime as dt
-import numpy as np
 
-FEB28_CHECK = np.array([2, 28], dtype=int)
-FEB29_CHECK = np.array([2, 29], dtype=int)
+FEB28 = (2, 28)
+FEB29 = (2, 29)
 NUL = dt.datetime(1, 1, 1)
 
 __all__ = [
@@ -19,30 +18,27 @@ __all__ = [
 ]
 
 # Days in each month of a leap year, used for validation.
-_month_days_29 = np.array((0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31), dtype=int)
-_month_days_28 = np.array((0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31), dtype=int)
-
-_month_days_29.setflags(write=False)
-_month_days_28.setflags(write=False)
+_month_days_29 = (0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+_month_days_28 = (0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 
 
 def _is_leap(year: int) -> bool:
     return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
 
 
-def _intervals_to_ndarray(cycles: Sequence[tuple[int, int]]) -> np.ndarray:
+def _intervals_to_array(cycles: Sequence[tuple[int, int]]) -> tuple[tuple[int, int]]:
     """
-    Safely build a numpy.ndarray from cycle intervals from a list of tuples.
+    Safely build a tuple[tuple[int, int]] from cycle intervals from a list of tuples.
 
-    This method drops duplicates, sorts the list of tuples, and converts it to a numpy.ndarray object.
+    This method drops duplicates, sorts the list of tuples, and converts it to a tuple[tuple[int, int]] object.
 
     Args:
         cycles (Sequence[tuple[int, int]]): A sequence of (month, day) tuples.
 
     Returns:
-        np.ndarray: A sorted and deduplicated numpy array of intervals.
+        tuple[tuple[int, int]]: A sorted and deduplicated array of intervals.
     """
-    return np.array(sorted(set([(r[0], r[1]) for r in cycles])), dtype=int)
+    return tuple(sorted(set([(r[0], r[1]) for r in cycles])))
 
 
 class DateIntervalCycler:
@@ -66,7 +62,7 @@ class DateIntervalCycler:
                                             If True, then it requires two calls to next() to get the second interval.
 
     Attributes:
-        cycles (np.ndarray): Immutable numpy array whose rows are the (month, day) that each interval cycles through.
+        cycles (tuple[tuple[int, int]]): Tuple array whose rows are the (month, day) that each interval cycles through.
 
         size (int): The number of intervals from first_interval_start to last_interval_end.
                     If last_interval_end is None, returns MAX_INTERVAL.
@@ -85,8 +81,8 @@ class DateIntervalCycler:
         interval_length (float): The number of days between interval_end and interval_start.
 
 
-        MONTH_DAYS_LEAP (np.ndarray): Days in each month of a leap year.
-        MONTH_DAYS_NOLEAP (np.ndarray): Days in each month of a non-leap year.
+        MONTH_DAYS_LEAP (tuple): Days in each month of a leap year (non-zero month number is index).
+        MONTH_DAYS_NOLEAP (tuple): Days in each month of a non-leap year (non-zero month number is index).
         MAX_INTERVAL (int): Maximum number of allowed intervals.
 
 
@@ -105,13 +101,13 @@ class DateIntervalCycler:
         with_daily(first_interval_start, last_interval_end=None, start_before_first_interval=False):
             Create a DateIntervalCycler with daily intervals.
 
-        copy(reset=False, shallow_copy_cycles=True):
+        copy(reset=False):
             Creates a copy of the DateIntervalCycler object.
 
         reset(start_before_first_interval=False):
             Resets the current interval to the first interval.
 
-        tolist(start_override=None, end_override=None, from_current_position=False):
+        tolist(start_override=None, end_override=None, from_current_position=False, as_str=False):
             Converts the intervals to a list.
 
         set_first_interval_start(first_interval_start, start_before_first_interval=False):
@@ -195,7 +191,7 @@ class DateIntervalCycler:
 
     MAX_INTERVAL: int = 2000000000  # int32 maxval is 2,147,483,647
 
-    cycles: np.array
+    cycles: tuple[tuple[int, int]]
 
     _dim: int  # size of cycles
     _len: int  # Interval count from _first_start_date to _last_end_date, is MAX_INTERVAL if _last_end_date is None
@@ -242,15 +238,11 @@ class DateIntervalCycler:
             _internal_copy_init (int, optional): Internal flag used by class for fast copying. Defaults to 0.
         """
         if _internal_copy_init:
-            if _internal_copy_init < 0:  # Negative is Shallow Copy
-                self.cycles = cycles
-            else:
-                self.cycles = cycles.copy()
-            self._lock_cycles()
+            self.cycles = cycles
 
             self._first_start_date = first_interval_start
             self._last_end_date = last_interval_end
-            self._dim = self.cycles.shape[0]
+            self._dim = len(cycles)
             self._started_before_first_interval = start_before_first_interval
 
             self._has_last_end_date = False
@@ -267,11 +259,10 @@ class DateIntervalCycler:
             self._at_last_interval = 0
             return
 
-        # Extract rows, drop duplicates, sort rows, then store as numpy ndarray
-        self.cycles = _intervals_to_ndarray(cycles)
-        self._lock_cycles()
+        # Extract rows, drop duplicates, sort rows, then store as tuple[tuple[int, int]] array
+        self.cycles = _intervals_to_array(cycles)
 
-        self._dim = self.cycles.shape[0]
+        self._dim = len(cycles)
         self._end_of_feb_check = False
         self._end_of_feb_check_has_28 = False
         self._p_feb_29 = DateIntervalCycler.MAX_INTERVAL
@@ -289,13 +280,12 @@ class DateIntervalCycler:
             if vd < 1 or vm < 1 or vm > 12 or _month_days_29[vm] < vd:
                 raise ValueError(f"\nDateIntervalCycler: Invalid (month, day) entry at cycles[{i}] = ({vm}, {vd})")
 
-        p_feb29 = np.where(np.all(self.cycles == FEB29_CHECK, axis=1))[0]
-        self._end_of_feb_check = p_feb29.size == 1
-        if self._end_of_feb_check:
-            self._p_feb_29 = p_feb29[0]
-        # self._end_of_feb_check = np.any(np.all(self.cycles == FEB29_CHECK, axis=1))
+        self._end_of_feb_check = FEB29 in self.cycles
 
-        self._end_of_feb_check_has_28 = self._end_of_feb_check and np.any(np.all(self.cycles == FEB28_CHECK, axis=1))
+        if self._end_of_feb_check:
+            self._p_feb_29 = self.cycles.index(FEB29)
+
+        self._end_of_feb_check_has_28 = self._end_of_feb_check and FEB28 in self.cycles
 
         self.set_first_interval_start(first_interval_start, start_before_first_interval)
         self.set_last_interval_end(last_interval_end)
@@ -440,7 +430,7 @@ class DateIntervalCycler:
         Returns:
             DateIntervalCycler: The initialized DateIntervalCycler object.
         """
-        cycles = _intervals_to_ndarray(cycles)
+        cycles = _intervals_to_array(cycles)
         m, d = cycles[starting_cycle_index]
         start = dt.datetime(year_start, m, d)
         if year_end is None:
@@ -561,18 +551,17 @@ class DateIntervalCycler:
             return _month_days_29[month]
         return _month_days_28[month]
 
-    def copy(self, reset: bool = False, shallow_copy_cycles=True) -> "DateIntervalCycler":
+    def copy(self, reset: bool = False) -> "DateIntervalCycler":
         """
         Creates a copy of the DateIntervalCycler object.
 
         Args:
             reset (bool, optional): Reset the copy to the first interval. Defaults to False.
-            shallow_copy_cycles (bool, optional): Create a shallow copy of cycles. Defaults to True.
 
         Returns:
             DateIntervalCycler: The copied DateIntervalCycler object.
         """
-        copy_flag = -1 if shallow_copy_cycles else 1
+        copy_flag = 1
 
         cid = DateIntervalCycler(
             self.cycles,
@@ -1026,6 +1015,7 @@ class DateIntervalCycler:
         start_override: Union[None, dt.datetime, dt.date, int] = None,
         end_override: Union[None, dt.datetime, dt.date, int] = None,
         from_current_position: bool = False,
+        as_str: bool = False,
     ) -> list[tuple[dt.datetime, dt.datetime]]:
         """
         Convert the intervals to a list of datetime tuples.
@@ -1038,6 +1028,8 @@ class DateIntervalCycler:
             start_override (Union[None, dt.datetime, dt.date, int], optional): Override for the start date of the list. Defaults to None.
             end_override (Union[None, dt.datetime, dt.date, int], optional): Override for the end date of the list. Defaults to None.
             from_current_position (bool, optional): Flag to start list from current interval. Defaults to False.
+            as_str (bool, optional): Flag to indicate that datetime objects should be converted to YYYY-MM-DD strings
+
 
         Returns:
             list[tuple[dt.datetime, dt.datetime]]: The DateIntervalCycler object as a list.
@@ -1076,16 +1068,10 @@ class DateIntervalCycler:
             cid._len = -999  # no need to recalculate for dummy variable
             cid._start_less_end_check()
 
+        if as_str:
+            return [(d1.strftime("%Y-%m-%d"), d2.strftime("%Y-%m-%d")) for d1, d2 in cid]
+
         return [it for it in cid]
-
-    def _lock_cycles(self):
-        """Internal method that locks the cycles array to prevent modification."""
-        self.cycles.setflags(write=False)
-
-    def _unlock_cycles(self):
-        """Internal method that unlocks the cycles array to allow modification.
-        Dangerous, allows editing cycles array"""
-        self.cycles.setflags(write=True)
 
     def _to_datetime(self, p, y: Optional[int] = None, feb29_move_next_fix=True) -> dt.datetime:
         """
@@ -1379,7 +1365,7 @@ class DateIntervalCycler:
         return self.copy()
 
     def __deepcopy__(self, unused=None) -> "DateIntervalCycler":
-        return self.copy(shallow_copy_cycles=False)
+        return self.copy()
 
     def __str__(self) -> str:
         """
@@ -1398,7 +1384,7 @@ class DateIntervalCycler:
             str: The detailed string representation of the DateIntervalCycler.
         """
         if self._dim < 7:
-            cy = str(self.cycles.tolist())
+            cy = f"[{str(self.cycles)[1:-1]}]"
         else:
             cy = f"[{self.cycles[0]}, {self.cycles[1]}, ..., {self.cycles[-2]}, {self.cycles[-1]}]"
 
@@ -1680,38 +1666,39 @@ if __name__ == "__main__":
 
     cid = DateIntervalCycler.from_year(cycles, 2000)
 
-    assert (cid.cycles == np.array([(1, 1), (4, 1), (4, 3), (4, 5), (7, 1), (10, 1)], dtype=int)).all()
+    assert cid.cycles == ((1, 1), (4, 1), (4, 3), (4, 5), (7, 1), (10, 1))
 
     cid = DateIntervalCycler.with_monthly(DUMMY_START)
-    assert (
-        cid.cycles
-        == np.array(
-            [(1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1), (11, 1), (12, 1)],
-            dtype=int,
-        )
-    ).all()
+    assert cid.cycles == (
+        (1, 1),
+        (2, 1),
+        (3, 1),
+        (4, 1),
+        (5, 1),
+        (6, 1),
+        (7, 1),
+        (8, 1),
+        (9, 1),
+        (10, 1),
+        (11, 1),
+        (12, 1),
+    )
 
     cid = DateIntervalCycler.with_monthly_end(DUMMY_START)
-    assert (
-        cid.cycles
-        == np.array(
-            [
-                (1, 31),
-                (2, 29),
-                (3, 31),
-                (4, 30),
-                (5, 31),
-                (6, 30),
-                (7, 31),
-                (8, 31),
-                (9, 30),
-                (10, 31),
-                (11, 30),
-                (12, 31),
-            ],
-            dtype=int,
-        )
-    ).all()
+    assert cid.cycles == (
+        (1, 31),
+        (2, 29),
+        (3, 31),
+        (4, 30),
+        (5, 31),
+        (6, 30),
+        (7, 31),
+        (8, 31),
+        (9, 30),
+        (10, 31),
+        (11, 30),
+        (12, 31),
+    )
 
     cid = DateIntervalCycler.with_daily(DUMMY_START)
 

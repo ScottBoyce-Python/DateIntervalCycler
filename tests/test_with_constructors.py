@@ -1,6 +1,5 @@
 from DateIntervalCycler import DateIntervalCycler
 import datetime as dt
-import numpy as np
 
 
 def test_with_monthly():
@@ -12,34 +11,28 @@ def test_with_monthly():
     assert len(cid) == 1812  # months
     assert cid.size == 1812
 
-    assert (
-        cid.cycles
-        == np.array(
-            [
-                (1, 1),
-                (2, 1),
-                (3, 1),
-                (4, 1),
-                (5, 1),
-                (6, 1),
-                (7, 1),
-                (8, 1),
-                (9, 1),
-                (10, 1),
-                (11, 1),
-                (12, 1),
-            ],
-            dtype=int,
-        )
-    ).all()
+    assert cid.cycles == (
+        (1, 1),
+        (2, 1),
+        (3, 1),
+        (4, 1),
+        (5, 1),
+        (6, 1),
+        (7, 1),
+        (8, 1),
+        (9, 1),
+        (10, 1),
+        (11, 1),
+        (12, 1),
+    )
 
     cid2 = DateIntervalCycler.with_monthly(start)
 
     assert len(cid2) == DateIntervalCycler.MAX_INTERVAL  # no end date specified
     assert cid2.size == DateIntervalCycler.MAX_INTERVAL
 
-    assert (cid.cycles == cid2.cycles).all()
-    assert (cid.cycles == cid2.copy().cycles).all()  # generate a copy
+    assert cid.cycles == cid2.cycles
+    assert cid.cycles == cid2.copy().cycles  # generate a copy
 
 
 def test_with_monthly_end():
@@ -51,34 +44,28 @@ def test_with_monthly_end():
     assert len(cid) == 1812  # months
     assert cid.size == 1812
 
-    assert (
-        cid.cycles
-        == np.array(
-            [
-                (1, 31),
-                (2, 29),
-                (3, 31),
-                (4, 30),
-                (5, 31),
-                (6, 30),
-                (7, 31),
-                (8, 31),
-                (9, 30),
-                (10, 31),
-                (11, 30),
-                (12, 31),
-            ],
-            dtype=int,
-        )
-    ).all()
+    assert cid.cycles == (
+        (1, 31),
+        (2, 29),
+        (3, 31),
+        (4, 30),
+        (5, 31),
+        (6, 30),
+        (7, 31),
+        (8, 31),
+        (9, 30),
+        (10, 31),
+        (11, 30),
+        (12, 31),
+    )
 
     cid2 = DateIntervalCycler.with_monthly_end(start)
 
     assert len(cid2) == DateIntervalCycler.MAX_INTERVAL  # no end date specified
     assert cid2.size == DateIntervalCycler.MAX_INTERVAL
 
-    assert (cid.cycles == cid2.cycles).all()
-    assert (cid.cycles == cid2.copy().cycles).all()  # generate a copy
+    assert cid.cycles == cid2.cycles
+    assert cid.cycles == cid2.copy().cycles  # generate a copy
 
 
 def test_with_daily():
@@ -88,7 +75,7 @@ def test_with_daily():
         for it in range(365):
             date += dt.timedelta(days=1)
             md.append((date.month, date.day))
-        return np.array(md, dtype=int)
+        return tuple(md)
 
     start = dt.datetime(1900, 1, 1)
     end = dt.datetime(2050, 12, 31)
@@ -98,15 +85,15 @@ def test_with_daily():
     assert len(cid) == (end - start).days
     assert cid.size == len(cid)
 
-    assert (cid.cycles == month_day_tuples()).all()
+    assert cid.cycles == month_day_tuples()
 
     cid2 = DateIntervalCycler.with_daily(start)
 
     assert len(cid2) == DateIntervalCycler.MAX_INTERVAL  # no end date specified
     assert cid2.size == DateIntervalCycler.MAX_INTERVAL
 
-    assert (cid.cycles == cid2.cycles).all()
-    assert (cid.cycles == cid2.copy().cycles).all()  # generate a copy
+    assert cid.cycles == cid2.cycles
+    assert cid.cycles == cid2.copy().cycles  # generate a copy
 
 
 def test_from_year_start():

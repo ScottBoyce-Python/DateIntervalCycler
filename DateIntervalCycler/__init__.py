@@ -20,7 +20,7 @@ Args:
                                         If True, then it requires two calls to next() to get the second interval.
 
 Attributes:
-    cycles (np.ndarray): Immutable numpy array whose rows are the (month, day) that each interval cycles through.
+    cycles (tuple[tuple[int, int]]): Tuple array whose rows are the (month, day) that each interval cycles through.
 
     size (int): The number of intervals from first_interval_start to last_interval_end.
                 If last_interval_end is None, returns MAX_INTERVAL.
@@ -39,8 +39,8 @@ Attributes:
     interval_length (float): The number of days between interval_end and interval_start.
 
 
-    MONTH_DAYS_LEAP (np.ndarray): Days in each month of a leap year.
-    MONTH_DAYS_NOLEAP (np.ndarray): Days in each month of a non-leap year.
+    MONTH_DAYS_LEAP (tuple): Days in each month of a leap year (non-zero month number is index).
+    MONTH_DAYS_NOLEAP (tuple): Days in each month of a non-leap year (non-zero month number is index).
     MAX_INTERVAL (int): Maximum number of allowed intervals.
 
 
@@ -59,13 +59,13 @@ Methods:
     with_daily(first_interval_start, last_interval_end=None, start_before_first_interval=False):
         Create a DateIntervalCycler with daily intervals.
 
-    copy(reset=False, shallow_copy_cycles=True):
+    copy(reset=False):
         Creates a copy of the DateIntervalCycler object.
 
     reset(start_before_first_interval=False):
         Resets the current interval to the first interval.
 
-    tolist(start_override=None, end_override=None, from_current_position=False):
+    tolist(start_override=None, end_override=None, from_current_position=False, as_str=False):
         Converts the intervals to a list.
 
     set_first_interval_start(first_interval_start, start_before_first_interval=False):

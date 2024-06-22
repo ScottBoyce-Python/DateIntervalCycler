@@ -20,9 +20,7 @@ or you can clone the respository with
 git clone https://github.com/ScottBoyce-Python/DateIntervalCycler.git
 ```
 and then move the file `DateIntervalCycler/DateIntervalCycler.py` to wherever you want to use it.
-The only requirement/dependency is numpy (and its dependencies), but you can install the requirements via:
 
-pip install -r requirements.txt
 
 ## Usage
 DateIntervalCycler `with_` constructors example:

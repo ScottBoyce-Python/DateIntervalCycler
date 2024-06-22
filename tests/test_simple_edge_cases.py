@@ -4,6 +4,20 @@ from DateIntervalCycler import DateIntervalCycler
 
 
 # Test edge cases
+def test_str_intervals():
+    cid = DateIntervalCycler([(1, 15), (6, 20)], dt(2019, 1, 4), dt(2020, 2, 4))
+    assert repr(cid) == "DateIntervalCycler(cycles=[(1, 15), (6, 20)], start=2019-01-04, end=2020-02-04)"
+
+    assert str(cid) == "(2019-01-04, 2019-01-15)"
+    cid.next()
+    assert str(cid) == "(2019-01-15, 2019-06-20)"
+    cid.next()
+    assert str(cid) == "(2019-06-20, 2020-01-15)"
+    cid.next()
+    assert str(cid) == "(2020-01-15, 2020-02-04)"
+
+
+# Test edge cases
 def test_empty_intervals():
     with pytest.raises(ValueError):
         DateIntervalCycler([], dt(2020, 1, 1), dt(2021, 1, 1))
@@ -23,7 +37,6 @@ def test_nonexistent_dates():
 
     with pytest.raises(ValueError):
         DateIntervalCycler([(1, 0)], dt(2020, 1, 1), dt(2021, 1, 1))
-
 
 
 def test_leap_year_handling_len1():
@@ -184,10 +197,10 @@ def test_one_day_cycle():
     assert len(intervals) == 1
     assert intervals == [(dt(2020, 1, 1), dt(2020, 1, 2))]
 
-    cid = DateIntervalCycler([(1, 1),(1, 2)], dt(2020, 1, 1), dt(2020, 1, 3))
+    cid = DateIntervalCycler([(1, 1), (1, 2)], dt(2020, 1, 1), dt(2020, 1, 3))
     intervals = cid.tolist()
     assert len(intervals) == 2
-    assert intervals == [(dt(2020, 1, 1), dt(2020, 1, 2)), (dt(2020, 1, 2),dt(2020, 1, 3))]
+    assert intervals == [(dt(2020, 1, 1), dt(2020, 1, 2)), (dt(2020, 1, 2), dt(2020, 1, 3))]
 
 
 def test_large_date_range():
@@ -197,7 +210,7 @@ def test_large_date_range():
 
     cid = DateIntervalCycler([(1, 1)], dt(2000, 1, 1), dt(2100, 1, 2))
     intervals = cid.tolist()
-    assert len(intervals) == len(cid) == 101  # extra interval for (dt(2100, 1, 1), dt(2100, 1, 2)) 
+    assert len(intervals) == len(cid) == 101  # extra interval for (dt(2100, 1, 1), dt(2100, 1, 2))
 
     cid = DateIntervalCycler([(1, 1)], dt(2000, 1, 30), dt(2100, 1, 1))
     intervals = cid.tolist()

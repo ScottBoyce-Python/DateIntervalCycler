@@ -10,7 +10,6 @@ maintainers = [{ name = "Scott E. Boyce", email = "Boyce@engineer.com" }]
 license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.8,<4"
-dependencies = ["numpy"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
@@ -48,7 +47,7 @@ addopts = "-ra --dist worksteal -nauto"  # Defaults to parallel tests, comment o
 
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-    "subtest: marks tests as beings a subset of a slow_skip test that is created for fast parallel executaion, skipped if running slow_skip.",
+    "subset: marks tests as beings a subset of a slow_skip test that is created for fast parallel executaion, skipped if running slow_skip.",
     "slow_skip: marks tests as slow_skip, which are also marked with skip\n(select with 'pytest --run-skipped', which will skip subtest.)"
 ]
 
