@@ -824,20 +824,20 @@ class DateIntervalCycler:
             Iterator[tuple[dt.datetime, dt.datetime]]: The iterator object.
         """
         if self._at_first_interval != 0 and self._at_last_interval != 0:
-            return self.interval
+            yield self.interval
+            return
+
         if reset_to_start:
             self.reset()
 
         if self._started_before_first_interval:
-            while True:
-                if self.next():  # reached end of range
-                    return self.interval
+            while not self.next():
                 yield self.interval
         else:
             while True:
                 yield self.interval
                 if self.next():  # reached end of range
-                    return self.interval
+                    return
 
     def index_to_interval(
         self, index, only_start: bool = False, only_end: bool = False
@@ -1109,17 +1109,19 @@ class DateIntervalCycler:
             )
         if y is None:
             y = self._y
+
         if p != self._p_feb_29 or _is_leap(y):  # No need to worry about invalid Feb29
             if p < self._dim:
                 return dt.datetime(y, *self.cycles[p])
-            return dt.datetime(y + 1, *self.cycles[0])
+            return self._to_datetime(0, y + 1, feb29_move_next_fix)  # evaluate again with p=0 for next year
 
         if not self._end_of_feb_check_has_28:
-            return dt.datetime(y, 2, 28)  # 29 defined, but not 28 and not leap year, so use 28
+            # Year is not a leap, but cycle=(2, 29), return (2, 28) if it is not in cycles
+            return dt.datetime(y, 2, 28)
 
         if feb29_move_next_fix:
-            return self._to_datetime(p + 1)  # has 28 so move next cause 29 does not exist
-        return self._to_datetime(p - 1)  # has 28 so move back cause 29 does not exist
+            return self._to_datetime(p + 1, y, feb29_move_next_fix)  # has 28 and no 29, so move to next
+        return self._to_datetime(p - 1, y, feb29_move_next_fix)  # has 28 and no 29, so move to previous
 
         # if p < self._dim:
         #     m, d = self.cycles[p]
