@@ -26,8 +26,8 @@ dynamic = [ "version"]
 test-tools = ["pytest", "pytest-xdist"]
 
 [project.urls]
-"Homepage" = "https://github.com/yourusername/my_project"
-"Source Code" = "https://github.com/yourusername/my_project"
+"Homepage" = "https://github.com/ScottBoyce-Python/DateIntervalCycler"
+"Source Code" = "https://github.com/ScottBoyce-Python/DateIntervalCycler"
 
 [project.readme]
 file = "README.md"
