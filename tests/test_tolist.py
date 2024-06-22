@@ -404,11 +404,8 @@ ans_for_3 = [
 def test_tolist_value_error():
     cid = DateIntervalCycler.with_monthly(dt.datetime(1950, 1, 1))
 
-    start = dt.datetime(2000, 2, 1)
-    end = dt.datetime(2005, 11, 1)  # note tolist is is inclusive for end index
-
-    with pytest.raises(ValueError):
-        cid.tolist(end, start)
+    with pytest.raises(ValueError):  # missing end date
+        cid.tolist()
 
 
 def test_tolist1():
@@ -422,7 +419,7 @@ def test_tolist1():
     cid = DateIntervalCycler(cycles, dt.datetime(1950, 1, 1))
 
     start = dt.datetime(2000, 2, 1)
-    end = dt.datetime(2005, 11, 1)  # note tolist is is inclusive for end index
+    end = dt.datetime(2005, 11, 1)  # note tolist is is inclusive for end date
 
     assert cid.tolist(start, end) == ans_for_1_and_2
 
