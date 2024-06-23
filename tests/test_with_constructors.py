@@ -11,7 +11,7 @@ def test_with_monthly():
     assert len(cid) == 1812  # months
     assert cid.size == 1812
 
-    assert tuple(map(tuple, cid.cycles)) == (
+    assert tuple(map(tuple, cid.cycles.tolist())) == (
         (1, 1),
         (2, 1),
         (3, 1),

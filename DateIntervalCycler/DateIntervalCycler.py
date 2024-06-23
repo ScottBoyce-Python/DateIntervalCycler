@@ -1521,7 +1521,7 @@ class DateIntervalCycler:
             str: The detailed string representation of the DateIntervalCycler.
         """
         if self._dim < 7:
-            cy = str(list(map(tuple, self.cycles)))
+            cy = str(list(map(tuple, self.cycles.tolist())))
         else:
             cy = f"[{tuple(self.cycles[0])}, {tuple(self.cycles[1])}, ..., {tuple(self.cycles[-2])}, {tuple(self.cycles[-1])}]"
 
