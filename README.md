@@ -4,25 +4,28 @@
   <img src="https://github.com/ScottBoyce-Python/DateIntervalCycler/actions/workflows/python-pytest.yml/badge.svg" alt="Build Status" height="20">
 </p>
 
-DateIntervalCycler is a Python class that cycles through datetime intervals based on provided (month, day) tuples. Intervals can be cycled through using a next and back methods or as an iterator within a loop. Specific intervals can be queried with an index or containing date. Lastly, the entire interval series can be converted to a list of tuples.
+DateIntervalCycler is a Python object that cycles through datetime intervals based on provided (month, day) tuples. Intervals can be cycled through using a next and back methods or as an iterator within a loop. Specific intervals can be queried with an index or containing date. Lastly, the entire interval series can be converted to a list of tuples or list of the start date for each interval.
 
-If cycles contains (2, 29), then it will honor leap years by setting the interval date time (2, 28) for non-leap years. However, if the cycles contains both (2, 28) and (2, 29), then it will skip using (2, 29) for non-leap years.
-
-This class is used to generate a datetime series of intervals that follow the user specified interval cycles. 
+The list of (month, day) tuples is called the "cycles". If cycles contains (2, 29), then it will honor leap years by setting the interval date time (2, 28) for non-leap years. However, if the cycles contains both (2, 28) and (2, 29), then it will skip using (2, 29) for non-leap years as the interval from Feb-28 to Feb-29 does not exist. If cycles only contains (2, 28), then the object functions as normal with generating intervals.
 
 
 
 ## Installation
 To install the module
-```
+```bash
 pip install --upgrade git+https://github.com/ScottBoyce-Python/DateIntervalCycler.git
 ```
 
 or you can clone the respository with
-```
+```bash
 git clone https://github.com/ScottBoyce-Python/DateIntervalCycler.git
 ```
 and then move the file `DateIntervalCycler/DateIntervalCycler.py` to wherever you want to use it.
+
+If you want to install the numpy version of the module (not recommended), then run the command:
+```bash
+pip install git+https://github.com/ScottBoyce-Python/DateIntervalCycler@numpy-dep
+```
 
 
 ## Usage
