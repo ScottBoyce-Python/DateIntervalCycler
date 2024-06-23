@@ -1,0 +1,39 @@
+name: CI Numpy dependencies
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run this workflow'
+        required: true
+        default: 'numpy-dep'
+
+jobs:
+  run-tests:
+    if: github.ref == 'refs/heads/numpy-dep'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    name: Test package
+    runs-on: ${{ matrix.os}}
+
+    steps:
+      - name: Run actions/checkout
+        uses: actions/checkout@v4
+
+      - name: Run actions/setup-python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version}}
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install numpy
+          pip install .[test-tools]
+
+      - name: Run tests
+        run: pytest
