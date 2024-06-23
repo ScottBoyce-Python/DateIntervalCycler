@@ -289,7 +289,7 @@ def test_cycle_sort_and_remove_duplicate():
 
     cid = DateIntervalCycler(cycles, dt(2020, 1, 1))
 
-    assert cid.cycles == (
+    assert tuple(map(tuple, cid.cycles)) == (
         (1, 1),
         (1, 2),
         (1, 8),

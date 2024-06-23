@@ -11,7 +11,7 @@ def test_with_monthly():
     assert len(cid) == 1812  # months
     assert cid.size == 1812
 
-    assert cid.cycles == (
+    assert tuple(map(tuple, cid.cycles)) == (
         (1, 1),
         (2, 1),
         (3, 1),
@@ -31,8 +31,8 @@ def test_with_monthly():
     assert len(cid2) == DateIntervalCycler.MAX_INTERVAL  # no end date specified
     assert cid2.size == DateIntervalCycler.MAX_INTERVAL
 
-    assert cid.cycles == cid2.cycles
-    assert cid.cycles == cid2.copy().cycles  # generate a copy
+    assert tuple(map(tuple, cid.cycles)) == tuple(map(tuple, cid2.cycles))
+    assert tuple(map(tuple, cid.cycles)) == tuple(map(tuple, cid2.copy().cycles))  # generate a copy
 
 
 def test_with_monthly_end():
@@ -44,7 +44,7 @@ def test_with_monthly_end():
     assert len(cid) == 1812  # months
     assert cid.size == 1812
 
-    assert cid.cycles == (
+    assert tuple(map(tuple, cid.cycles)) == (
         (1, 31),
         (2, 29),
         (3, 31),
@@ -64,8 +64,8 @@ def test_with_monthly_end():
     assert len(cid2) == DateIntervalCycler.MAX_INTERVAL  # no end date specified
     assert cid2.size == DateIntervalCycler.MAX_INTERVAL
 
-    assert cid.cycles == cid2.cycles
-    assert cid.cycles == cid2.copy().cycles  # generate a copy
+    assert tuple(map(tuple, cid.cycles)) == tuple(map(tuple, cid2.cycles))
+    assert tuple(map(tuple, cid.cycles)) == tuple(map(tuple, cid2.copy().cycles))  # generate a copy
 
 
 def test_with_daily():
@@ -85,15 +85,15 @@ def test_with_daily():
     assert len(cid) == (end - start).days
     assert cid.size == len(cid)
 
-    assert cid.cycles == month_day_tuples()
+    assert tuple(map(tuple, cid.cycles)) == month_day_tuples()
 
     cid2 = DateIntervalCycler.with_daily(start)
 
     assert len(cid2) == DateIntervalCycler.MAX_INTERVAL  # no end date specified
     assert cid2.size == DateIntervalCycler.MAX_INTERVAL
 
-    assert cid.cycles == cid2.cycles
-    assert cid.cycles == cid2.copy().cycles  # generate a copy
+    assert tuple(map(tuple, cid.cycles)) == tuple(map(tuple, cid2.cycles))
+    assert tuple(map(tuple, cid.cycles)) == tuple(map(tuple, cid2.copy().cycles))  # generate a copy
 
 
 def test_from_year_start():

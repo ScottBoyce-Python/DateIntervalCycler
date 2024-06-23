@@ -20,6 +20,9 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
 ]
 dynamic = ["version"]
+dependencies = [
+    "numpy>=1.26.0"
+]
 
 [project.optional-dependencies]
 # pip install .[test-tools]
