@@ -1,12 +1,12 @@
-name: CI Numpy dependencies
+name: CI Numpy Dependent Version
 
 on:
-  workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to run this workflow'
-        required: true
-        default: 'numpy-dep'
+  push:
+    branches:
+      - numpy-dep
+  pull_request:
+    branches:
+      - numpy-dep
 
 jobs:
   run-tests:
