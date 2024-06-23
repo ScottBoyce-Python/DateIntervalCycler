@@ -1,5 +1,8 @@
-
 # DateIntervalCycler
+
+<p align="left">
+  <img src="https://github.com/ScottBoyce-Python/DateIntervalCycler/actions/workflows/python-pytest.yml/badge.svg" alt="Build Status" height="20">
+</p>
 
 DateIntervalCycler is a Python class that cycles through datetime intervals based on provided (month, day) tuples. Intervals can be cycled through using a next and back methods or as an iterator within a loop. Specific intervals can be queried with an index or containing date. Lastly, the entire interval series can be converted to a list of tuples.
 
