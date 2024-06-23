@@ -1,17 +1,30 @@
 from typing import Sequence, Union, Optional, Iterator
 import datetime as dt
-from ._metadata import (
-    __version__,
-    __author__,
-    __email__,
-    __license__,
-    __status__,
-    __maintainer__,
-    __credits__,
-    __url__,
-    __description__,
-    __copyright__,
-)
+
+try:
+    from _metadata import (
+        __version__,
+        __author__,
+        __email__,
+        __license__,
+        __status__,
+        __maintainer__,
+        __credits__,
+        __url__,
+        __description__,
+        __copyright__,
+    )
+except ImportError:
+    __version__ = "Failed to load from _metadata.py"
+    __author__ = __version__
+    __email__ = __version__
+    __license__ = __version__
+    __status__ = __version__
+    __maintainer__ = __version__
+    __credits__ = __version__
+    __url__ = __version__
+    __description__ = __version__
+    __copyright__ = __version__
 
 FEB28 = (2, 28)
 FEB29 = (2, 29)
@@ -1553,120 +1566,47 @@ if __name__ == "__main__":
     print(f"Description: {__description__}")
     print(f"Copyright: {__copyright__}")
 
-    print("Starting Main Tests")
+    print("\nExample 1\n")
 
-    def daily_dates(start_date, end_date=None, reverse=False):
-        date = start_date
-        inc = -1 if reverse else 1
-        while end_date is None or date <= end_date:
-            yield date
-            date += dt.timedelta(days=inc)
+    # from DateIntervalCycler import DateIntervalCycler
+    from datetime import datetime
 
-    def d(y, m, d) -> dt.datetime:
-        return dt.datetime(y, m, d)
+    # Initialize the cycler with a start date, end date
+    start_date = datetime(2000, 1, 15)
+    end_date = datetime(2002, 2, 10)
 
-    def st(date) -> str:
-        return date.strftime("%Y-%m-%d")
+    cid_monthly = DateIntervalCycler.with_monthly(start_date, end_date)  # Cycles first of each month between two dates
+    cid_monthly_end = DateIntervalCycler.with_monthly_end(
+        start_date, end_date
+    )  # Cycles last day of each month between two dates
+    cid_daily = DateIntervalCycler.with_daily(start_date, end_date)  # Cycles every day between two dates
 
-    def half(d1, d2):
-        if d1 > d2:
-            d1, d2 = d2, d1
-        return d1 + (d2 - d1) / 2
+    # Iterate through the intervals
+    print("Index,       Start,  End")
+    for interval_start, interval_end in cid_monthly:
+        if 4 < cid_monthly.index < cid_monthly.size - 4:
+            continue
+        print(f"{cid_monthly.index:>5},  {interval_start.strftime('%Y-%m-%d')},  {interval_end.strftime('%Y-%m-%d')}")
 
-    cycles = [
-        (6, 1),  # Duplicate should be dropped
-    ]
-
-    cid = DateIntervalCycler(cycles, dt.datetime(2000, 7, 1), dt.datetime(2019, 2, 1))
-    lst = cid.tolist()
-    assert lst == [
-        (dt.datetime.strptime(start_date, "%Y-%m-%d"), dt.datetime.strptime(end_date, "%Y-%m-%d"))
-        for start_date, end_date in [
-            ("2000-7-1", "2001-6-1"),  # Note, it honors the starting date
-            ("2001-6-1", "2002-6-1"),  # Follows the month and day defined by "cycles"
-            ("2002-6-1", "2003-6-1"),
-            ("2003-6-1", "2004-6-1"),
-            ("2004-6-1", "2005-6-1"),
-            ("2005-6-1", "2006-6-1"),
-            ("2006-6-1", "2007-6-1"),
-            ("2007-6-1", "2008-6-1"),
-            ("2008-6-1", "2009-6-1"),
-            ("2009-6-1", "2010-6-1"),
-            ("2010-6-1", "2011-6-1"),
-            ("2011-6-1", "2012-6-1"),
-            ("2012-6-1", "2013-6-1"),
-            ("2013-6-1", "2014-6-1"),
-            ("2014-6-1", "2015-6-1"),
-            ("2015-6-1", "2016-6-1"),
-            ("2016-6-1", "2017-6-1"),
-            ("2017-6-1", "2018-6-1"),
-            ("2018-6-1", "2019-2-1"),  # Note, it honors the ending date
-        ]
-    ]
-
-    cid = DateIntervalCycler.from_year(cycles, 1960)
-    assert cid.next_get()[0] == dt.datetime(1961, 6, 1)
-    assert cid.next_get()[0] == dt.datetime(1962, 6, 1)
-    assert cid.next_get()[0] == dt.datetime(1963, 6, 1)
-
-    cid = DateIntervalCycler.with_monthly(dt.datetime(2000, 3, 1))
-    assert cid.next_get()[0] == dt.datetime(2000, 4, 1)
-    assert cid.next_get()[0] == dt.datetime(2000, 5, 1)
-    assert cid.next_get()[0] == dt.datetime(2000, 6, 1)
-
-    cid = DateIntervalCycler.with_monthly_end(dt.datetime(2000, 3, 1))
-    assert cid.next_get()[0] == dt.datetime(2000, 3, 31)
-    assert cid.next_get()[0] == dt.datetime(2000, 4, 30)
-    assert cid.next_get()[0] == dt.datetime(2000, 5, 31)
-
-    cid = DateIntervalCycler.with_daily(dt.datetime(2000, 2, 27))
-    assert cid.next_get()[0] == dt.datetime(2000, 2, 28)
-    assert cid.next_get()[0] == dt.datetime(2000, 2, 29)
-    assert cid.next_get()[0] == dt.datetime(2000, 3, 1)
-    assert cid.next_get()[0] == dt.datetime(2000, 3, 2)
-
-    cid = DateIntervalCycler.with_daily(dt.datetime(2001, 2, 27))
-    assert cid.next_get()[0] == dt.datetime(2001, 2, 28)
-    assert cid.next_get()[0] == dt.datetime(2001, 3, 1)
-    assert cid.next_get()[0] == dt.datetime(2001, 3, 2)
-
-    cid = DateIntervalCycler.with_daily(dt.datetime(2000, 3, 1))
-    assert cid.next_get()[0] == dt.datetime(2000, 3, 2)
-    assert cid.next_get()[0] == dt.datetime(2000, 3, 3)
-    assert cid.next_get()[0] == dt.datetime(2000, 3, 4)
-
-    try:
-        cid = DateIntervalCycler.with_daily(dt.datetime(2000, 3, 1), dt.datetime(2000, 1, 1))
-    except ValueError:
-        pass
-
-    try:
-        lst = DateIntervalCycler.with_daily(dt.datetime(2000, 1, 1)).tolist(
-            start_override=dt.datetime(2000, 3, 1), end_override=dt.datetime(2000, 1, 1)
+    print("\nIndex,       Start,  End")
+    for interval_start, interval_end in cid_monthly_end:
+        if 4 < cid_monthly_end.index < cid_monthly_end.size - 4:
+            continue
+        print(
+            f"{cid_monthly_end.index:>5},  {interval_start.strftime('%Y-%m-%d')},  {interval_end.strftime('%Y-%m-%d')}"
         )
-    except ValueError:
-        pass
 
-    DUMMY_START = dt.datetime(2000, 1, 1)
-    DUMMY_END = dt.datetime(2005, 1, 1)
+    print("\nIndex,       Start,  End")
+    for interval_start, interval_end in cid_daily:
+        if 4 < cid_daily.index < cid_daily.size - 4:
+            continue
+        print(f"{cid_daily.index:>5},  {interval_start.strftime('%Y-%m-%d')},  {interval_end.strftime('%Y-%m-%d')}")
 
-    cid = DateIntervalCycler.with_daily(DUMMY_START, DUMMY_END)
-    lst = cid.tolist()
-    ind = 0
-    for date0, date1 in cid:
-        i0 = cid.index_from_date(date0)
-        i1 = cid.index_from_date(date1)
-        assert ind == i0
-        assert ind + 1 == i1
-        assert lst[ind] == (date0, date1)
+    print("\nExample 2\n")
 
-        assert cid.index_to_interval(ind) == (date0, date1)
-        assert cid.index_to_interval(ind, True) == date0
-        assert cid.index_to_interval(ind, False, True) == date1
-        assert cid[ind] == (date0, date1)
-        ind += 1
-
-    year_start = 1950
+    # Initialize the cycler with a start date, end date, and interval pattern
+    start_date = datetime(2000, 1, 1)
+    end_date = datetime(2005, 6, 1)
 
     cycles = [
         (1, 1),  # (month, day)
@@ -1675,497 +1615,47 @@ if __name__ == "__main__":
         (10, 1),
     ]
 
-    cid = DateIntervalCycler.from_year(cycles, year_start)
-    cid.next()
-    cid.next()
-    assert cid.interval_start == dt.datetime(1950, 7, 1)
-    assert cid.interval_end == dt.datetime(1950, 10, 1)
-    cid.back()
-    assert cid.next_get() == (dt.datetime(1950, 7, 1), dt.datetime(1950, 10, 1))
-    assert cid.next_get() == (dt.datetime(1950, 10, 1), dt.datetime(1951, 1, 1))
-    assert cid.next_get() == (dt.datetime(1951, 1, 1), dt.datetime(1951, 4, 1))
-
-    cid.reset()
-    assert cid.interval_start == dt.datetime(1950, 1, 1)
-
-    cad2 = cid.copy()
-
-    cid.next()
-    cid.next()
-    assert cid.interval_start == dt.datetime(1950, 7, 1)
-    assert cid.interval == (dt.datetime(1950, 7, 1), dt.datetime(1950, 10, 1))
-
-    assert cad2.interval_start == dt.datetime(1950, 1, 1)  # Should remain unchanged
-    del cad2
-
-    next_time_day_diff = (dt.datetime(1951, 1, 1) - dt.datetime(1950, 10, 1)).total_seconds() / 86400.0
-
-    cid.next()
-    assert cid.interval_length == next_time_day_diff  # Advance time and return day difference
-
-    start = dt.datetime(2000, 2, 1)
-    end = dt.datetime(2005, 11, 1)
-
-    assert cid.tolist(start, end) == [
-        (dt.datetime.strptime(start_date, "%Y-%m-%d"), dt.datetime.strptime(end_date, "%Y-%m-%d"))
-        for start_date, end_date in [
-            ("2000-02-01", "2000-04-01"),  # Note, it honors the starting date
-            ("2000-04-01", "2000-07-01"),  # Follows the month and day defined by "cycles"
-            ("2000-07-01", "2000-10-01"),
-            ("2000-10-01", "2001-01-01"),
-            ("2001-01-01", "2001-04-01"),
-            ("2001-04-01", "2001-07-01"),
-            ("2001-07-01", "2001-10-01"),
-            ("2001-10-01", "2002-01-01"),
-            ("2002-01-01", "2002-04-01"),
-            ("2002-04-01", "2002-07-01"),
-            ("2002-07-01", "2002-10-01"),
-            ("2002-10-01", "2003-01-01"),
-            ("2003-01-01", "2003-04-01"),
-            ("2003-04-01", "2003-07-01"),
-            ("2003-07-01", "2003-10-01"),
-            ("2003-10-01", "2004-01-01"),
-            ("2004-01-01", "2004-04-01"),
-            ("2004-04-01", "2004-07-01"),
-            ("2004-07-01", "2004-10-01"),
-            ("2004-10-01", "2005-01-01"),
-            ("2005-01-01", "2005-04-01"),
-            ("2005-04-01", "2005-07-01"),
-            ("2005-07-01", "2005-10-01"),
-            ("2005-10-01", "2005-11-01"),  # Note, it honors the ending date
-        ]
-    ]
-
-    cycles = [
-        (7, 1),  # Values out of order should be sorted
-        (4, 5),
-        (4, 3),
-        (4, 1),
-        (1, 1),
-        (4, 3),  # Duplicate should be dropped
-        (10, 1),
-    ]
-
-    cid = DateIntervalCycler.from_year(cycles, 2000)
-
-    assert cid.cycles == ((1, 1), (4, 1), (4, 3), (4, 5), (7, 1), (10, 1))
-
-    cid = DateIntervalCycler.with_monthly(DUMMY_START)
-    assert cid.cycles == (
-        (1, 1),
-        (2, 1),
-        (3, 1),
-        (4, 1),
-        (5, 1),
-        (6, 1),
-        (7, 1),
-        (8, 1),
-        (9, 1),
-        (10, 1),
-        (11, 1),
-        (12, 1),
-    )
-
-    cid = DateIntervalCycler.with_monthly_end(DUMMY_START)
-    assert cid.cycles == (
-        (1, 31),
-        (2, 29),
-        (3, 31),
-        (4, 30),
-        (5, 31),
-        (6, 30),
-        (7, 31),
-        (8, 31),
-        (9, 30),
-        (10, 31),
-        (11, 30),
-        (12, 31),
-    )
-
-    cid = DateIntervalCycler.with_daily(DUMMY_START)
-
-    assert cid.interval_start == DUMMY_START
-
-    for i in range(56):  # Move to Feb 26 as start date
-        cid.next()
-
-    assert cid.next_get() == (dt.datetime(2000, 2, 27), dt.datetime(2000, 2, 28))
-    assert cid.next_get() == (dt.datetime(2000, 2, 28), dt.datetime(2000, 2, 29))
-    assert cid.next_get() == (dt.datetime(2000, 2, 29), dt.datetime(2000, 3, 1))
-
-    cid.reset()
-    assert cid.interval_start == DUMMY_START
-
-    dd = daily_dates(DUMMY_START)
-    for i in range(12000):  # Check about 30 years of daily
-        if cid.interval_start != next(dd):
-            date = next(dd) - dt.timedelta(days=1)
-            raise RuntimeError(
-                "\nDaily date dose not match expected datetime for the "
-                f"{i} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
-            )
-        cid.next()
-
-    if cid.interval_start != next(dd):
-        date = next(dd) - dt.timedelta(days=1)
-        raise RuntimeError(
-            "\nDaily date dose not match expected datetime for the "
-            f"{i+1} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
-        )
-
-    dd = daily_dates(cid.interval_start, reverse=True)
-    for i in range(12000):  # Check about 30 years of daily
-        if cid.interval_start != next(dd):
-            date = next(dd) + dt.timedelta(days=1)
-            raise RuntimeError(
-                "\nDaily date in reverse dose not match expected datetime for the "
-                f"{i} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
-            )
-        cid.back()
-
-    if cid.interval_start != next(dd):
-        date = next(dd) - dt.timedelta(days=1)
-        raise RuntimeError(
-            "\nDaily date in reverse dose not match expected datetime for the "
-            f"{i+1} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
-        )
-
-    assert cid.interval_start == DUMMY_START  # Should be back to the start
-
-    cycles = [
-        (1, 1),
-        (4, 1),
-        (7, 1),
-        (10, 1),
-    ]
-
-    start = dt.datetime(1950, 3, 1)
-    end = dt.datetime(1970, 11, 1)
-
-    cid = DateIntervalCycler(cycles, start, end)
-
-    assert cid.interval_start == dt.datetime(1950, 3, 1)
-    assert cid.interval_end == dt.datetime(1950, 4, 1)
-    cid.next()
-    assert cid.interval_start == dt.datetime(1950, 4, 1)
-    assert cid.interval_end == dt.datetime(1950, 7, 1)
-    cid.next()
-    assert cid.interval_start == dt.datetime(1950, 7, 1)
-    assert cid.interval_end == dt.datetime(1950, 10, 1)
-    cid.back()
-    assert cid.interval_start == dt.datetime(1950, 4, 1)
-    assert cid.interval_end == dt.datetime(1950, 7, 1)
-    cid.back()
-    assert cid.interval_start == dt.datetime(1950, 3, 1)
-    assert cid.interval_end == dt.datetime(1950, 4, 1)
-
-    start = dt.datetime(1952, 2, 1)
-    end = dt.datetime(2020, 11, 1)
-    cid = DateIntervalCycler.with_daily(start, end)
-
-    assert cid.interval_start == start
-    assert cid.interval_end == dt.datetime(1952, 2, 2)
-
-    for i in range(25):  # Move to Feb 26 as start date
-        cid.next()
-
-    assert cid.next_get() == (dt.datetime(1952, 2, 27), dt.datetime(1952, 2, 28))
-    assert cid.next_get() == (dt.datetime(1952, 2, 28), dt.datetime(1952, 2, 29))
-    assert cid.next_get() == (dt.datetime(1952, 2, 29), dt.datetime(1952, 3, 1))
-
-    cid.reset()
-    assert cid.interval_start == start
-
-    dd = daily_dates(start)
-    for i in range(12000):  # Check about 30 years of daily
-        if cid.interval_start != next(dd):
-            date = next(dd) - dt.timedelta(days=1)
-            raise RuntimeError(
-                "\nDaily date dose not match expected datetime for the "
-                f"{i} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
-            )
-        cid.next()
-
-    if cid.interval_start != next(dd):
-        date = next(dd) - dt.timedelta(days=1)
-        raise RuntimeError(
-            "\nDaily date dose not match expected datetime for the "
-            f"{i+1} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
-        )
-
-    dd = daily_dates(cid.interval_start, reverse=True)
-    for i in range(12000):  # Check about 30 years of daily
-        if cid.interval_start != next(dd):
-            date = next(dd) + dt.timedelta(days=1)
-            raise RuntimeError(
-                "\nDaily date in reverse dose not match expected datetime for the "
-                f"{i} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
-            )
-        cid.back()
-
-    if cid.interval_start != next(dd):
-        date = next(dd) - dt.timedelta(days=1)
-        raise RuntimeError(
-            "\nDaily date in reverse dose not match expected datetime for the "
-            f"{i+1} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
-        )
-
-    assert cid.interval_start == start  # Should be back to the start
-
-    start = dt.datetime(2000, 2, 1)
-    end = dt.datetime(2020, 11, 1)
-    cid = DateIntervalCycler.with_daily(start, end)
-
-    dd = daily_dates(start)
-    for i in range(12000):  # Check about 30 years of daily
-        if cid.interval_start != next(dd):
-            date = next(dd) - dt.timedelta(days=1)
-            raise RuntimeError(
-                "\nDaily date dose not match expected datetime for the "
-                f"{i} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
-            )
-        if cid.next() > 0:
-            break
-
-    assert cid.interval_start == end - dt.timedelta(days=1)
-    assert cid.interval_end == end
-
-    cid.back()
-    assert cid.interval_start == end - dt.timedelta(days=2)
-    assert cid.interval_end == end - dt.timedelta(days=1)
-    cid.back()
-    assert cid.interval_start == end - dt.timedelta(days=3)
-    assert cid.interval_end == end - dt.timedelta(days=2)
-
-    cid.reset()
-    dd = daily_dates(start)
-    for interval in cid:  # Check about 30 years of daily
-        if interval[0] != next(dd):
-            date = next(dd) - dt.timedelta(days=1)
-            raise RuntimeError(
-                "\nDaily date dose not match expected datetime for the "
-                f"{i} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
-            )
-
-    assert cid.interval_start == end - dt.timedelta(days=1)
-    assert cid.interval_end == end
-
-    cid.back()
-    assert cid.interval_start == end - dt.timedelta(days=2)
-    assert cid.interval_end == end - dt.timedelta(days=1)
-    cid.back()
-    assert cid.interval_start == end - dt.timedelta(days=3)
-    assert cid.interval_end == end - dt.timedelta(days=2)
-
-    cid.reset()
-    dd = daily_dates(start)
-    for interval in cid.iter():  # Check about 30 years of daily
-        if interval[0] != next(dd):
-            date = next(dd) - dt.timedelta(days=1)
-            raise RuntimeError(
-                "\nDaily date dose not match expected datetime for the "
-                f"{i} iteration,\nwhich returned a date of {cid.interval_start}\nbut expected {date}"
-            )
-
-    assert cid.interval_start == end - dt.timedelta(days=1)
-    assert cid.interval_end == end
-
-    cid.back()
-    assert cid.interval_start == end - dt.timedelta(days=2)
-    assert cid.interval_end == end - dt.timedelta(days=1)
-    cid.back()
-    assert cid.interval_start == end - dt.timedelta(days=3)
-    assert cid.interval_end == end - dt.timedelta(days=2)
-
-    # ----------------------------------------------------------------------------------------
-
-    cycles = [
-        (2, 1),  # (month, day)
-        (4, 1),
-        (6, 1),
-        (8, 1),
-        (10, 1),
-    ]
-
-    y0 = 2000  # Must be leap year
-    yN = 2020  # Must be leap year
-
-    start_list = (
-        [dt.datetime(y0, m, 1) for m in range(1, 13)]
-        + [dt.datetime(y0, m, 5) for m in range(1, 13)]
-        + [dt.datetime(y0 - 1, m, 1) for m in range(1, 13)]
-        + [dt.datetime(y0 - 1, m, 5) for m in range(1, 13)]
-        + [dt.datetime(y0 + 1, m, 1) for m in range(1, 13)]
-        + [dt.datetime(y0 + 1, m, 5) for m in range(1, 13)]
-        + [dt.datetime(y0, m, _month_days_29[m]) for m in range(1, 13)]
-        + [dt.datetime(y0 - 1, m, (0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[m]) for m in range(1, 13)]
-        + [dt.datetime(y0 + 1, m, (0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[m]) for m in range(1, 13)]
-        + [
-            dt.datetime(y0, 2, 28),
-            dt.datetime(y0, 2, 29),
-            dt.datetime(y0, 3, 1),
-            dt.datetime(y0 + 1, 2, 28),
-            dt.datetime(y0 + 1, 3, 1),
-        ]
-    )
-
-    end_list = (
-        [dt.datetime(yN, m, 1) for m in range(1, 13)]
-        + [dt.datetime(yN, m, 5) for m in range(1, 13)]
-        + [dt.datetime(yN - 1, m, 1) for m in range(1, 13)]
-        + [dt.datetime(yN - 1, m, 5) for m in range(1, 13)]
-        + [dt.datetime(yN + 1, m, 1) for m in range(1, 13)]
-        + [dt.datetime(yN + 1, m, 5) for m in range(1, 13)]
-        + [dt.datetime(yN, m, _month_days_29[m]) for m in range(1, 13)]
-        + [dt.datetime(yN - 1, m, (0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[m]) for m in range(1, 13)]
-        + [dt.datetime(yN + 1, m, (0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[m]) for m in range(1, 13)]
-        + [
-            dt.datetime(yN, 2, 28),
-            dt.datetime(yN, 2, 29),
-            dt.datetime(yN, 3, 1),
-            dt.datetime(yN + 1, 2, 28),
-            dt.datetime(yN + 1, 3, 1),
-        ]
-    )
-
-    print("\nTwo-month cycle tests")
-    it = 0
-    dm = len(start_list)
-    for start in start_list:
-        it += 1
-        print(f"   2M Test {it} of {dm}")
-        for end in end_list:
-            cid = DateIntervalCycler(cycles, start, end)
-            ind = 0
-            e_old = start
-            for s, e in cid:
-                # print(f"{st(start)}, {st(end)}, {cid.index}, {st(s)}, {st(e)}, ")
-                assert s == e_old
-                assert cid.index == ind
-                assert cid.index == cid.index_from_date(s)
-                assert cid.index == cid.index_from_date(half(s, e))
-                assert cid.index_to_interval(ind) == (s, e)
-                assert cid.index + 1 == cid.index_from_date(e)
-
-                assert cid.index_to_interval(cid.index) == (s, e)
-                assert cid.index_to_interval(cid.index, True) == s
-                assert cid.index_to_interval(cid.index, False, True) == e
-
-                e_old = e
-                ind += 1
-
-    y0 = 2000  # Must be leap year
-    yN = 2004  # Must be leap year
-
-    start_list = (
-        [dt.datetime(y0, m, 1) for m in range(1, 13)]
-        + [dt.datetime(y0, m, 5) for m in range(1, 13)]
-        + [dt.datetime(y0 - 1, m, 1) for m in range(1, 13)]
-        + [dt.datetime(y0 - 1, m, 5) for m in range(1, 13)]
-        + [dt.datetime(y0 + 1, m, 1) for m in range(1, 13)]
-        + [dt.datetime(y0 + 1, m, 5) for m in range(1, 13)]
-        + [dt.datetime(y0, m, _month_days_29[m]) for m in range(1, 13)]
-        + [dt.datetime(y0 - 1, m, (0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[m]) for m in range(1, 13)]
-        + [dt.datetime(y0 + 1, m, (0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[m]) for m in range(1, 13)]
-        + [
-            dt.datetime(y0, 2, 28),
-            dt.datetime(y0, 2, 29),
-            dt.datetime(y0, 3, 1),
-            dt.datetime(y0 + 1, 2, 28),
-            dt.datetime(y0 + 1, 3, 1),
-        ]
-    )
-
-    end_list = (
-        [dt.datetime(yN, m, 1) for m in range(1, 13)]
-        + [dt.datetime(yN, m, 5) for m in range(1, 13)]
-        + [dt.datetime(yN - 1, m, 1) for m in range(1, 13)]
-        + [dt.datetime(yN - 1, m, 5) for m in range(1, 13)]
-        + [dt.datetime(yN + 1, m, 1) for m in range(1, 13)]
-        + [dt.datetime(yN + 1, m, 5) for m in range(1, 13)]
-        + [dt.datetime(yN, m, _month_days_29[m]) for m in range(1, 13)]
-        + [dt.datetime(yN - 1, m, (0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[m]) for m in range(1, 13)]
-        + [dt.datetime(yN + 1, m, (0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)[m]) for m in range(1, 13)]
-        + [
-            dt.datetime(yN, 2, 28),
-            dt.datetime(yN, 2, 29),
-            dt.datetime(yN, 3, 1),
-            dt.datetime(yN + 1, 2, 28),
-            dt.datetime(yN + 1, 3, 1),
-        ]
-    )
-
-    print("\nDaily cycle tests")
-    it = 0
-    dm = len(start_list)
-    for start in start_list:
-        it += 1
-        print(f"   D Test {it} of {dm}")
-        for end in end_list:
-            cid = DateIntervalCycler.with_daily(start, end)
-            ind = 0
-            e_old = start
-            for s, e in cid:
-                # print(f"{st(start)}, {st(end)}, {cid.index}, {st(s)}, {st(e)}, ")
-                assert s == e_old
-                assert cid.index == ind
-                assert cid.index == cid.index_from_date(s)
-                assert cid.index_to_interval(ind) == (s, e)
-
-                e_old = e
-                ind += 1
-            assert cid.index + 1 == cid.index_from_date(e)  # e = end date
-
-    start_list = (
-        [dt.datetime(y0, 1, 1), dt.datetime(y0, 5, 1), dt.datetime(y0, 6, 1), dt.datetime(y0, 7, 1)]
-        + [dt.datetime(y0 - 1, 1, 1), dt.datetime(y0 - 1, 5, 1), dt.datetime(y0 - 1, 6, 1), dt.datetime(y0 - 1, 7, 1)]
-        + [dt.datetime(y0 + 1, 1, 1), dt.datetime(y0 + 1, 5, 1), dt.datetime(y0 + 1, 6, 1), dt.datetime(y0 + 1, 7, 1)]
-        + [dt.datetime(y0, m, 1) for m in range(2, 13)]
-        + [dt.datetime(y0 - 1, m, 1) for m in range(2, 13)]
-        + [dt.datetime(y0 + 1, m, 1) for m in range(2, 13)]
-        + [
-            dt.datetime(y0, 2, 28),
-            dt.datetime(y0, 2, 29),
-            dt.datetime(y0, 3, 1),
-            dt.datetime(y0 + 1, 2, 28),
-            dt.datetime(y0 + 1, 3, 1),
-        ]
-    )
-
-    end_list = (
-        [dt.datetime(yN, 1, 1), dt.datetime(yN, 5, 1), dt.datetime(yN, 6, 1), dt.datetime(yN, 7, 1)]
-        + [dt.datetime(yN - 1, 1, 1), dt.datetime(yN - 1, 5, 1), dt.datetime(yN - 1, 6, 1), dt.datetime(yN - 1, 7, 1)]
-        + [dt.datetime(yN + 1, 1, 1), dt.datetime(yN + 1, 5, 1), dt.datetime(yN + 1, 6, 1), dt.datetime(yN + 1, 7, 1)]
-        + [dt.datetime(yN, m, 1) for m in range(2, 13)]
-        + [dt.datetime(yN - 1, m, 1) for m in range(2, 13)]
-        + [dt.datetime(yN + 1, m, 1) for m in range(2, 13)]
-        + [
-            dt.datetime(yN, 2, 28),
-            dt.datetime(yN, 2, 29),
-            dt.datetime(yN, 3, 1),
-            dt.datetime(yN + 1, 2, 28),
-            dt.datetime(yN + 1, 3, 1),
-        ]
-    )
-
-    cycles = [(m, d) for m in range(1, 13) for d in range(1, _month_days_29[m] + 1)][6:]
-    print("\nSemi-Daily cycle tests")
-    it = 0
-    dm = len(start_list)
-    for start in start_list:
-        it += 1
-        print(f"   SD Test {it} of {dm}")
-        for end in end_list:
-            cid = DateIntervalCycler(cycles, start, end)
-            ind = 0
-            e_old = start
-            for s, e in cid:
-                assert s == e_old
-                assert cid.index == ind
-                assert cid.index == cid.index_from_date(s)
-                assert cid.index_to_interval(ind) == (s, e)
-
-                e_old = e
-                ind += 1
-            assert cid.index + 1 == cid.index_from_date(e)  # e = end date
-    pass
+    cid = DateIntervalCycler(cycles, start_date, end_date)
+
+    # Iterate through the intervals
+    print("Index,       Start,  End")
+    for interval_start, interval_end in cid:
+        print(f"{cid.index:>5},  {interval_start.strftime('%Y-%m-%d')},  {interval_end.strftime('%Y-%m-%d')}")
+
+    cid.reset()  # reset to start of series
+
+    print("\nIndex,       Start,  End")
+    for i in range(4):
+        interval_start, interval_end = cid.interval  # get current interval
+        cid.next()  # move to next interval
+        print(f"{cid.index:>5},  {interval_start.strftime('%Y-%m-%d')},  {interval_end.strftime('%Y-%m-%d')}")
+
+    cid.reset(start_before_first_interval=True)  # first call to next() sets first interval as current
+    # rather than second interval
+
+    print("\nIndex,       Start,  End")
+    for i in range(4):
+        interval_start, interval_end = cid.next_get()  # equivalent to: cid.next(); cid.interval
+        print(f"{cid.index:>5},  {interval_start.strftime('%Y-%m-%d')},  {interval_end.strftime('%Y-%m-%d')}")
+
+    # Example of index and date lookup
+    lookup_date = datetime(2003, 4, 15)
+    lookup_index = 20
+
+    index = cid.index_from_date(lookup_date)  # find index of interval that contains the date
+    interval_start0, interval_end0 = cid.index_to_interval(lookup_index)  # find interval for given index
+    interval_start1, interval_end1 = cid.interval_from_date(lookup_date)  # find interval for given date
+
+    interval_start2, interval_end2 = cid.index_to_interval(
+        cid.index_from_date(lookup_date)
+    )  # find interval for given index
+
+    interval0 = f"{interval_start0.strftime('%Y-%m-%d')},  {interval_end0.strftime('%Y-%m-%d')}"
+    interval1 = f"{interval_start1.strftime('%Y-%m-%d')},  {interval_end1.strftime('%Y-%m-%d')}"
+    interval2 = f"{interval_start2.strftime('%Y-%m-%d')},  {interval_end2.strftime('%Y-%m-%d')}"
+
+    print("\nindex_to_ and  index_from_ results")
+    print(index)  # from cid.index_from_date(lookup_date)
+    print(interval0)  # from cid.index_to_interval(lookup_index)
+    print(interval1)  # from cid.interval_from_date(lookup_date); faster than index_to_interval(index_from_date(date))
+    print(interval2)  # from index_to_interval(index_from_date(date))
