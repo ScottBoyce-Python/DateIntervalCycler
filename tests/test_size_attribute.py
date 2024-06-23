@@ -124,6 +124,7 @@ def test_size_attribute_cycle():
             for end in end_list:
                 cid = DateIntervalCycler(cycles, start, end)
                 assert cid.size == len(cid.tolist())
+                assert cid.size == len(cid.totuple()) - 1
 
 
 def test_size_attribute_cycle_with_set():
@@ -134,4 +135,5 @@ def test_size_attribute_cycle_with_set():
             cid.set_first_interval_start(start)
             for end in end_list:
                 cid.set_last_interval_end(end)
-                assert len(cid) == len(cid.tolist())  # len(cid) == cid.size
+                assert len(cid) == len(cid.tolist())
+                assert len(cid) == len(cid.totuple()) - 1

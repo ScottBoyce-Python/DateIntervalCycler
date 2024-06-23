@@ -41,6 +41,7 @@ content-type = "text/markdown"
 [tool.pytest.ini_options]
 # agressive parallel options
 addopts = "-ra --dist worksteal -nauto" # Defaults to parallel tests, comment out if you want serial.
+# addopts = "-ra -v --dist worksteal -nauto" # parallel run with verbose output.
 # addopts="-ra --dist worksteal -nauto --run-slow-skip"  # run skip tests and skip subset tests
 # addopts="-ra --dist worksteal -nauto -m 'not slow'"  # on run fast tests
 # addopts = "-ra --dist worksteal -nauto -q"  # supress output during testing

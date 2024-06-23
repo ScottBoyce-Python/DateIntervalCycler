@@ -215,6 +215,178 @@ def test_large_date_range():
     assert len(intervals) == len(cid) == 100
 
 
+def test_leap_year_handling_len1_totuple():
+    cid = DateIntervalCycler([(2, 29)], dt(2019, 1, 1), dt(2019, 2, 1))
+    date_series = cid.totuple()
+    assert len(date_series) == 1 + 1
+    assert len(date_series) == len(cid) + 1
+    assert date_series == tuple((dt(2019, 1, 1), dt(2019, 2, 1)))
+
+    cid = DateIntervalCycler([(2, 29)], dt(2020, 1, 1), dt(2020, 2, 1))
+    date_series = cid.totuple()
+    assert len(date_series) == 2
+    assert len(date_series) == len(cid) + 1
+    assert date_series == tuple((dt(2020, 1, 1), dt(2020, 2, 1)))
+
+
+def test_leap_year_handling_len2_totuple():
+    cid = DateIntervalCycler([(2, 29)], dt(2019, 1, 1), dt(2020, 1, 1))
+    date_series = cid.totuple()
+    assert len(date_series) == 2 + 1
+    assert len(date_series) == len(cid) + 1
+    assert date_series == tuple(
+        (dt(2019, 1, 1), dt(2019, 2, 28), dt(2020, 1, 1)),
+    )
+    cid = DateIntervalCycler([(2, 29)], dt(2020, 1, 1), dt(2021, 1, 1))
+    date_series = cid.totuple()
+    assert len(date_series) == 2 + 1
+    assert len(date_series) == len(cid) + 1
+    assert date_series == tuple(
+        (dt(2020, 1, 1), dt(2020, 2, 29), dt(2021, 1, 1)),
+    )
+
+
+def test_leap_year_handling_len3_totuple():
+    cid = DateIntervalCycler([(2, 29)], dt(2019, 1, 1), dt(2021, 1, 1))
+    date_series = cid.totuple()
+    assert len(date_series) == 3 + 1
+    assert len(date_series) == len(cid) + 1
+    assert date_series == tuple(
+        (dt(2019, 1, 1), dt(2019, 2, 28), dt(2020, 2, 29), dt(2021, 1, 1)),
+    )
+
+    cid = DateIntervalCycler([(2, 29)], dt(2020, 1, 1), dt(2022, 1, 1))
+    date_series = cid.totuple()
+    assert len(date_series) == 3 + 1
+    assert len(date_series) == len(cid) + 1
+    assert date_series == tuple(
+        (dt(2020, 1, 1), dt(2020, 2, 29), dt(2021, 2, 28), dt(2022, 1, 1)),
+    )
+
+
+def test_leap_year_handling_len4_totuple():
+    cid = DateIntervalCycler([(2, 29)], dt(2019, 1, 1), dt(2022, 1, 1))
+    date_series = cid.totuple()
+    assert len(date_series) == 4 + 1
+    assert len(date_series) == len(cid) + 1
+    assert date_series == tuple(
+        (dt(2019, 1, 1), dt(2019, 2, 28), dt(2020, 2, 29), dt(2021, 2, 28), dt(2022, 1, 1)),
+    )
+
+
+def test_leap_year_handling_len6_totuple():
+    cid = DateIntervalCycler([(2, 29)], dt(2019, 1, 1), dt(2024, 1, 1))
+    date_series = cid.totuple()
+    assert len(date_series) == 6 + 1
+    assert len(date_series) == len(cid) + 1
+    assert date_series == tuple(
+        (
+            dt(2019, 1, 1),
+            dt(2019, 2, 28),
+            dt(2020, 2, 29),
+            dt(2021, 2, 28),
+            dt(2022, 2, 28),
+            dt(2023, 2, 28),
+            dt(2024, 1, 1),
+        ),
+    )
+
+
+def test_leap_year_handling_len7_totuple():
+    cid = DateIntervalCycler([(2, 29)], dt(2019, 1, 1), dt(2025, 1, 1))
+    date_series = cid.totuple()
+    assert len(date_series) == 7 + 1
+    assert len(date_series) == len(cid) + 1
+    assert date_series == tuple(
+        (
+            dt(2019, 1, 1),
+            dt(2019, 2, 28),
+            dt(2020, 2, 29),
+            dt(2021, 2, 28),
+            dt(2022, 2, 28),
+            dt(2023, 2, 28),
+            dt(2024, 2, 29),
+            dt(2025, 1, 1),
+        ),
+    )
+
+
+def test_leap_year_handling_len8_totuple():
+    cid = DateIntervalCycler([(2, 29)], dt(2019, 1, 1), dt(2026, 1, 1))
+    date_series = cid.totuple()
+    assert len(date_series) == 8 + 1
+    assert len(date_series) == len(cid) + 1
+    assert date_series == tuple(
+        (
+            dt(2019, 1, 1),
+            dt(2019, 2, 28),
+            dt(2020, 2, 29),
+            dt(2021, 2, 28),
+            dt(2022, 2, 28),
+            dt(2023, 2, 28),
+            dt(2024, 2, 29),
+            dt(2025, 2, 28),
+            dt(2026, 1, 1),
+        ),
+    )
+
+
+def test_leap_year_handling_totuple():
+    cid = DateIntervalCycler([(2, 29)], dt(2019, 1, 1), dt(2021, 1, 1))
+    date_series = cid.totuple()
+    assert len(date_series) == 4
+    assert len(date_series) == len(cid) + 1
+    assert date_series == tuple(
+        (dt(2019, 1, 1), dt(2019, 2, 28), dt(2020, 2, 29), dt(2021, 1, 1)),
+    )
+
+
+def test_cycle_on_year_edge_totuple():
+    cid = DateIntervalCycler([(1, 1), (12, 31)], dt(2020, 1, 1), dt(2021, 1, 1))
+    date_series = cid.totuple()
+    assert len(date_series) == 3
+    assert len(date_series) == len(cid) + 1
+    assert date_series == tuple(
+        (dt(2020, 1, 1), dt(2020, 12, 31), dt(2021, 1, 1)),
+    )
+
+
+def test_monthly_cycle_totuple():
+    cid = DateIntervalCycler([(1, 15), (2, 15)], dt(2020, 1, 1), dt(2021, 1, 1))
+    date_series = cid.totuple()
+    assert len(date_series) == 4
+    assert len(date_series) == len(cid) + 1
+    assert date_series == tuple(
+        (dt(2020, 1, 1), dt(2020, 1, 15), dt(2020, 2, 15), dt(2021, 1, 1)),
+    )
+
+
+def test_one_day_cycle_totuple():
+    cid = DateIntervalCycler([(1, 1)], dt(2020, 1, 1), dt(2020, 1, 2))
+    date_series = cid.totuple()
+    assert len(date_series) == 2
+    assert date_series == tuple((dt(2020, 1, 1), dt(2020, 1, 2)))
+
+    cid = DateIntervalCycler([(1, 1), (1, 2)], dt(2020, 1, 1), dt(2020, 1, 3))
+    date_series = cid.totuple()
+    assert len(date_series) == 3
+    assert date_series == tuple((dt(2020, 1, 1), dt(2020, 1, 2), dt(2020, 1, 3)))
+
+
+def test_large_date_range_totuple():
+    cid = DateIntervalCycler([(1, 1)], dt(2000, 1, 1), dt(2100, 1, 1))
+    date_series = cid.totuple()
+    assert len(date_series) == len(cid) + 1 == 100 + 1
+
+    cid = DateIntervalCycler([(1, 1)], dt(2000, 1, 1), dt(2100, 1, 2))
+    date_series = cid.totuple()
+    assert len(date_series) == len(cid) + 1 == 101 + 1  # extra interval for (dt(2100, 1, 1), dt(2100, 1, 2))
+
+    cid = DateIntervalCycler([(1, 1)], dt(2000, 1, 30), dt(2100, 1, 1))
+    date_series = cid.totuple()
+    assert len(date_series) == len(cid) + 1 == 100 + 1
+
+
 def test_invalid_month():
     with pytest.raises(ValueError):
         DateIntervalCycler([(13, 1)], dt(2020, 1, 1), dt(2021, 1, 1))

@@ -137,6 +137,12 @@ class DateIntervalCycler:
                only_start=False, only_end=False, step=1) -> list[Union[dt.datetime, tuple[dt.datetime, dt.datetime]]]:
             Converts the intervals to a list.
 
+        totuple(start_override=None, end_override=None, from_current_position=False
+                ) -> list[Union[dt.datetime, tuple[dt.datetime, dt.datetime]]]:
+            Return a tuple containing the first_interval_start, and then all the remaining
+            interval_end dates (including last_interval_end).
+            Note: `cid.totuple() == tuple(cid.tolist(only_start=True)) + (cid.last_interval_end,)`
+
         set_first_interval_start(first_interval_start, start_before_first_interval=False):
             Sets the start date of the interval range. Changing the start date invokes reset().
 
@@ -1193,6 +1199,79 @@ class DateIntervalCycler:
                     it = 0
                     lst.append(self.interval)
         return lst
+
+    def totuple(
+        self,
+        start_override: Union[None, dt.datetime, dt.date, int] = None,
+        end_override: Union[None, dt.datetime, dt.date, int] = None,
+        from_current_position: bool = False,
+    ) -> tuple[dt.datetime, ...]:
+        """
+        Return a tuple containing the first_interval_start, and then all
+        the remaining interval_end dates (including last_interval_end).
+
+        The tuple can use the current interval as the start or use all the intervals.
+        The tuple can optionally specify a different starting and/or ending date.
+        If last_interval_end is None, then end_override must be specified,
+        so there is an end to the tuple.
+
+        Note, both the end date and end_override dates are inclusive.
+
+        Note2, self.totuple() == tuple(self.tolist(only_start=True)) + (self.last_interval_end,)
+               len(self.totuple()) == len(self.tolist()) + 1
+
+        Args:
+            start_override (Union[None, dt.datetime, dt.date, int], optional): Override for the start date of the list.
+                                                                               If int, then the interval at index is the
+                                                                               start of the list. Defaults to None.
+            end_override (Union[None, dt.datetime, dt.date, int], optional): Override for the end date of the list.
+                                                                             If int, then the (index-1) interval is the
+                                                                             end of the list. Defaults to None.
+            from_current_position (bool, optional): Flag to start list from current interval. Defaults to False.
+
+
+        Returns:
+            tuple[dt.datetime, ...]: The DateIntervalCycler date series as a tuple.
+        """
+
+        if not self._has_last_end_date and end_override is None:
+            raise ValueError(
+                "\nDateIntervalCycler.totuple must specify an ending date\n"
+                "either when initializing the DateIntervalCycler object with `end=` or\n"
+                "or by passing `end_override` into this function."
+            )
+
+        cid = self.copy()  # No reset, but do a shallow copy
+
+        if start_override is not None:
+            if isinstance(start_override, int):
+                cid.set_first_interval_start(self[start_override][0])
+            else:
+                cid.set_first_interval_start(start_override)
+
+        elif not from_current_position:
+            cid.reset()
+
+        if end_override is not None:
+            if isinstance(end_override, int):
+                end_override = self[end_override][0]
+            elif type(end_override) is not dt.datetime:
+                try:
+                    end_override = dt.datetime(end_override.year, end_override.month, end_override.day)
+                except AttributeError:
+                    raise ValueError(
+                        "\nDateIntervalCycler.set_last_interval_end: Invalid last_interval_end.\n"
+                        f"Received: {end_override}"
+                    )
+            cid._last_end_date = end_override
+            cid._has_last_end_date = True
+            cid._len = -999  # no need to recalculate for dummy variable
+            if end_override <= cid._p0_date:
+                cid._at_last_interval = 1
+            if end_override <= cid._first_start_date:
+                return ()
+
+        return tuple(it for it in cid.iter(only_start=True)) + (cid._last_end_date,)
 
     def _to_datetime(self, p, y: Optional[int] = None, feb29_move_next_fix=True) -> dt.datetime:
         """
