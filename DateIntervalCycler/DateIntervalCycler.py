@@ -2,7 +2,7 @@ from typing import Sequence, Union, Optional, Iterator
 import datetime as dt
 
 try:
-    from _metadata import (
+    from ._metadata import (
         __version__,
         __author__,
         __email__,
