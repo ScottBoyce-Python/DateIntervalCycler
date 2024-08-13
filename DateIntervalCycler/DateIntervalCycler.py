@@ -3,7 +3,7 @@ import datetime as dt
 import numpy as np
 
 try:
-    from _metadata import (
+    from ._metadata import (
         __version__,
         __author__,
         __email__,
