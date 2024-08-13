@@ -2,7 +2,7 @@
 Metadata associated with DateIntervalCycler.py
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __author__ = "Scott E. Boyce"
 __email__ = "boyce@engineer.com"
 __license__ = "MIT"
