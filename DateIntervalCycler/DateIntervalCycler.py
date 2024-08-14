@@ -170,7 +170,7 @@ class DateIntervalCycler:
         index_from_date(date) -> int:
             Returns the index of the interval that contains the given date.
 
-        interval_from_date(date) -> int:
+        interval_from_date(date) -> tuple[dt, dt]:
             Given a date, return the corresponding interval that contains it.
 
         is_leap(year: int) -> bool:
