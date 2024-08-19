@@ -162,7 +162,12 @@ class DateIntervalCycler:
             Moves back to the previous interval and returns its start and end dates.
 
         iter(only_start=False, only_end=False, reset_to_start=False) -> Iterator[Union[dt,tuple[dt, dt]]]:
-            Returns an iterator for the intervals.
+            Returns an iterator that starts at the current interval position and
+            each iteration moves to the next interval.
+
+        iter_all(only_start=False, only_end=False) -> Iterator[Union[dt,tuple[dt, dt]]]:
+            Returns an iterator that starts at the first interval and
+            will NOT effect the stored current interval position.
 
         index_to_interval(index, only_start=False, only_end=False) -> tuple[dt, dt]:
             Given an index, returns the corresponding interval.***
@@ -830,6 +835,27 @@ class DateIntervalCycler:
             if not _is_leap(self._y):
                 self._p_back()  # p -= 1 because Feb 29 is invalid for this year and 28 is defined
         return 0
+
+    def iter_all(
+        self, only_start: bool = False, only_end: bool = False
+    ) -> Iterator[Union[dt.datetime, tuple[dt.datetime, dt.datetime]]]:
+        """
+        Returns an iterator that starts at the first interval and will NOT
+        effect the stored current interval position. Each subsequent next call returns the
+        next interval's start and end date. This continues until the last interval.
+        If last_interval_end is None, then iterator will continue indefinitely.
+
+        Args:
+            only_start (bool, optional): Flag to iterate only the start date.
+                                         Defaults to False.
+            only_end (bool, optional): Flag to iterate only the end date.
+                                       Defaults to False.
+
+        Returns:
+            Iterator[tuple[dt.datetime, dt.datetime]]: The iterator object.
+        """
+        cid = self.copy(reset=True)
+        return cid.iter(only_start, only_end)
 
     def iter(
         self, only_start: bool = False, only_end: bool = False, reset_to_start=False
