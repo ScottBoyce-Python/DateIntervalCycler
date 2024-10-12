@@ -1,6 +1,8 @@
 from typing import Sequence, Union, Optional, Iterator
 import datetime as dt
 
+# %% --------------------------------------------------------------------------
+
 try:
     from ._metadata import (
         __version__,
@@ -15,16 +17,34 @@ try:
         __copyright__,
     )
 except ImportError:
-    __version__ = "Failed to load from _metadata.py"
-    __author__ = __version__
-    __email__ = __version__
-    __license__ = __version__
-    __status__ = __version__
-    __maintainer__ = __version__
-    __credits__ = __version__
-    __url__ = __version__
-    __description__ = __version__
-    __copyright__ = __version__
+    try:
+        from _metadata import (
+            __version__,
+            __author__,
+            __email__,
+            __license__,
+            __status__,
+            __maintainer__,
+            __credits__,
+            __url__,
+            __description__,
+            __copyright__,
+        )
+    except ImportError:
+        # _metadata.py failed to load,
+        # fill in with dummy values (script may be standalone)
+        __version__ = "Failed to load from _metadata.py"
+        __author__ = __version__
+        __email__ = __version__
+        __license__ = __version__
+        __status__ = __version__
+        __maintainer__ = __version__
+        __credits__ = __version__
+        __url__ = __version__
+        __description__ = __version__
+        __copyright__ = __version__
+
+# %% --------------------------------------------------------------------------
 
 FEB28 = (2, 28)
 FEB29 = (2, 29)
@@ -37,6 +57,8 @@ __all__ = [
 # Days in each month of a leap year, used for validation.
 _month_days_29 = (0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
 _month_days_28 = (0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
+
+# %% --------------------------------------------------------------------------
 
 
 def _is_leap(year: int) -> bool:
@@ -56,6 +78,8 @@ def _intervals_to_array(cycles: Sequence[tuple[int, int]]) -> tuple[tuple[int, i
         tuple[tuple[int, int]]: A sorted and deduplicated array of intervals.
     """
     return tuple(sorted(set([(r[0], r[1]) for r in cycles])))
+
+# %% --------------------------------------------------------------------------
 
 
 class DateIntervalCycler:
@@ -1657,6 +1681,8 @@ class DateIntervalCycler:
         # if self.next() < 2:  # 0 or 1, indicates interval is still valid
         #     return rng
         raise StopIteration
+
+# %% --------------------------------------------------------------------------
 
 
 if __name__ == "__main__":
